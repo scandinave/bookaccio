@@ -33,6 +33,25 @@
 
 <hr />
 
+<h2>🛠️ Building from source</h2>
+
+<pre><code>npm install
+npx expo run:android</code></pre>
+
+<p>
+  <strong>Release builds.</strong> Signing credentials are read from <code>android/.env</code>.
+  To produce a signed APK, copy the template and fill it in:
+</p>
+
+<pre><code>cp android/.env.example android/.env
+cd android &amp;&amp; ./gradlew assembleRelease</code></pre>
+
+<p>
+  <code>KEYSTORE_FILE</code> is resolved relative to <code>android/app/</code>.
+</p>
+
+<hr />
+
 <h2>💖 Support My Work</h2>
 
 <p>

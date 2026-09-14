@@ -6,13 +6,24 @@ def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 def loadEnvProperties() {
     def properties = new Properties()
-    file("../.env").withInputStream {
-        properties.load(it)
+    def envFile = file("../.env")
+    if (envFile.exists()) {
+        envFile.withInputStream {
+            properties.load(it)
+        }
+    } else {
+        logger.lifecycle("android/.env not found - release signing is disabled (see android/.env.example)")
     }
     return properties
 }
 
 def env = loadEnvProperties()
+
+def hasReleaseKeystore = env['KEYSTORE_FILE'] != null &&
+        env['KEYSTORE_PASSWORD'] != null &&
+        env['KEY_ALIAS'] != null &&
+        env['KEY_PASSWORD'] != null &&
+        file(env['KEYSTORE_FILE']).exists()
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -122,12 +133,14 @@ android {
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
-    signingConfigs {     
+    signingConfigs {
         release {
-            storeFile file(env['KEYSTORE_FILE'])
-            storePassword env['KEYSTORE_PASSWORD']
-            keyAlias env['KEY_ALIAS']
-            keyPassword env['KEY_PASSWORD']
+            if (hasReleaseKeystore) {
+                storeFile file(env['KEYSTORE_FILE'])
+                storePassword env['KEYSTORE_PASSWORD']
+                keyAlias env['KEY_ALIAS']
+                keyPassword env['KEY_PASSWORD']
+            }
         }
     }
     buildTypes {
@@ -135,7 +148,9 @@ android {
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.release
+            // Without android/.env the release APK is left unsigned, which is what
+            // reproducible F-Droid builds expect. Never fall back to the debug key here.
+            signingConfig = hasReleaseKeystore ? signingConfigs.release : null
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
