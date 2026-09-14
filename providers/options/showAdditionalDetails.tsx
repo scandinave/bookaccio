@@ -1,5 +1,5 @@
 import { getData } from '@/helpers/storage';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 type ShowAdditionalDetailsContextProps = [boolean, React.Dispatch<React.SetStateAction<boolean>>];
 
@@ -8,11 +8,15 @@ export const ShowAdditionalDetailsContext = createContext<ShowAdditionalDetailsC
 const ShowAdditionalDetailsProvider = ({ children }: { children: React.ReactNode }) => {
   const [additionalDetailsShown, setAdditionalDetailsShown] = useState(false);
 
-  getData('additionalDetails').then((value) => {
-    if (value !== undefined) {
-      setAdditionalDetailsShown(value);
-    }
-  });
+  // Reading storage in the render body fired a new AsyncStorage read on
+  // every render, and each resolution triggered another render.
+  useEffect(() => {
+    getData('additionalDetails').then((value) => {
+      if (value !== undefined) {
+        setAdditionalDetailsShown(value);
+      }
+    });
+  }, []);
 
   return <ShowAdditionalDetailsContext.Provider value={[additionalDetailsShown, setAdditionalDetailsShown]}>{children}</ShowAdditionalDetailsContext.Provider>;
 };

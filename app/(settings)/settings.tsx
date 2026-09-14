@@ -29,6 +29,7 @@ import { Link } from 'expo-router';
 import { useApiKeyContext } from '@/providers/apiKeyProvider';
 import Modal from 'react-native-modal';
 import { checkApiKey } from '@/helpers/checkApiKey';
+import { alertBookApiFailure } from '@/helpers/bookSearchAlert';
 import { Feather } from '@expo/vector-icons';
 import ApiKeyInstructions from '@/components/apiKeyInstructions';
 
@@ -62,13 +63,8 @@ const Settings = () => {
   const { t } = useTranslation();
 
   const getWorkingKey = async () => {
-    try {
-      const workingKey = await getData('apiKey');
-      return workingKey || '';
-    } catch (err) {
-      console.log(err);
-      return '';
-    }
+    const workingKey = await getData('apiKey');
+    return typeof workingKey === 'string' ? workingKey : '';
   };
 
   function handleLink(url: string) {
@@ -156,29 +152,26 @@ const Settings = () => {
   };
 
   function handleAPIKey() {
-    console.log('Logged');
-    checkApiKey(apiKey).then((data) => {
-      if (data === null) {
-        console.log('Error');
-        Alert.alert('Error', 'You seem to have entered an incorrect API Key. Please try again.');
-      } else {
-        Alert.alert('Success', `Your Google Books API Key -- ${apiKey} -- has been updated`);
-        setData('apiKey', apiKey);
-        setShowApiModal(false);
+    checkApiKey(apiKey).then((result) => {
+      if (!result.ok) {
+        alertBookApiFailure(result.kind, t);
+        return;
       }
+      setData('apiKey', apiKey);
+      setShowApiModal(false);
+      Alert.alert('Success', 'Your Google Books API Key has been updated');
     });
   }
 
   function deleteApiKey() {
     Alert.alert('Do you want to delete your API Key?', 'This will delete your API permanently. Do you want to coninue?', [
-      { text: 'Cancel', style: 'cancel', onPress: () => console.log('Canceled Deleting API Key') },
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'default',
         onPress: () => {
           setApiKey('');
-          setData('apiKey', '');
-          console.log('API Key has been deleted');
+          deleteData('apiKey');
         },
       },
     ]);

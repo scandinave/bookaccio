@@ -1,5 +1,5 @@
 import { getData } from '@/helpers/storage';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 type FontsProps = [string, React.Dispatch<React.SetStateAction<string>>];
 
@@ -8,11 +8,15 @@ export const FontsContext = createContext<FontsProps | []>([]);
 const FontsProvider = ({ children }: { children: React.ReactNode }) => {
   const [font, setFont] = useState<string>('Quicksand');
 
-  getData('font').then((value) => {
-    if (value) {
-      setFont(value);
-    }
-  });
+  // Reading storage in the render body fired a new AsyncStorage read on
+  // every render, and each resolution triggered another render.
+  useEffect(() => {
+    getData('font').then((value) => {
+      if (value) {
+        setFont(value);
+      }
+    });
+  }, []);
 
   return <FontsContext.Provider value={[font, setFont]}>{children}</FontsContext.Provider>;
 };

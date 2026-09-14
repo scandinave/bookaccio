@@ -1,5 +1,5 @@
 import { getData } from '@/helpers/storage';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 type AccentColorProps = [string, React.Dispatch<React.SetStateAction<string>>];
 
@@ -7,11 +7,15 @@ export const AccentColorContext = createContext<AccentColorProps | []>([]);
 
 const AccentColorProvider = ({ children }: { children: React.ReactNode }) => {
   const [accentColor, setAccentColor] = useState('#005d7b');
-  getData('accentColor').then((value) => {
-    if (value) {
-      setAccentColor(value);
-    }
-  });
+  // Reading storage in the render body fired a new AsyncStorage read on
+  // every render, and each resolution triggered another render.
+  useEffect(() => {
+    getData('accentColor').then((value) => {
+      if (value) {
+        setAccentColor(value);
+      }
+    });
+  }, []);
 
   return <AccentColorContext.Provider value={[accentColor, setAccentColor]}>{children}</AccentColorContext.Provider>;
 };

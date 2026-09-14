@@ -7,23 +7,27 @@ export async function getData(key: string) {
       return JSON.parse(value);
     }
   } catch (error) {
-    return error;
+    console.log(`[storage] failed to read "${key}":`, error instanceof Error ? error.message : error);
   }
+  return undefined;
 }
 
 export async function setData(key: string, value: any) {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(value));
-    return 'Data Stored Successfully';
+    return true;
   } catch (error) {
-    return error;
+    console.log(`[storage] failed to write "${key}":`, error instanceof Error ? error.message : error);
+    return false;
   }
 }
 
 export async function deleteData(key: string) {
   try {
     await AsyncStorage.removeItem(key);
-  } catch (err) {
-    return err;
+    return true;
+  } catch (error) {
+    console.log(`[storage] failed to delete "${key}":`, error instanceof Error ? error.message : error);
+    return false;
   }
 }

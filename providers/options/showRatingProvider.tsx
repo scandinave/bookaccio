@@ -1,5 +1,5 @@
 import { getData } from '@/helpers/storage';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 type ShowRatingContextProps = [boolean, React.Dispatch<React.SetStateAction<boolean>>];
 
@@ -8,11 +8,15 @@ const ShowRatingContext = createContext<ShowRatingContextProps | []>([]);
 const ShowRatingProvider = ({ children }: { children: React.ReactNode }) => {
   const [ratingShown, setRatingShown] = useState(false);
 
-  getData('ratingShown').then((value) => {
-    if (value !== undefined) {
-      setRatingShown(value);
-    }
-  });
+  // Reading storage in the render body fired a new AsyncStorage read on
+  // every render, and each resolution triggered another render.
+  useEffect(() => {
+    getData('ratingShown').then((value) => {
+      if (value !== undefined) {
+        setRatingShown(value);
+      }
+    });
+  }, []);
 
   return <ShowRatingContext.Provider value={[ratingShown, setRatingShown]}>{children}</ShowRatingContext.Provider>;
 };
