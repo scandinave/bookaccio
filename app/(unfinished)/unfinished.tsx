@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, FlatList, Pressable, TextInput, Keyboard, ScrollView, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Pressable, TextInput, Keyboard, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Modal from 'react-native-modal';
 import React, { useState } from 'react';
 import BookItem from '@/components/bookItem';
@@ -9,15 +9,17 @@ import { useAccentColorContext } from '@/providers/accentColorProvider';
 import { useFontsContext } from '@/providers/fontProvider';
 import BookSearchItem from '@/components/bookSearchItem';
 import { getBookDetails } from '@/helpers/getBookDetails';
-import axios from 'axios';
 import { router } from 'expo-router';
 import { useSelectedBookContext } from '@/providers/selectedBookProvider';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { getBookByIsbn } from '@/helpers/getBookByIsbn';
+import { getVolumeById } from '@/helpers/getVolumeById';
+import { alertBookApiFailure, alertNoResult } from '@/helpers/bookSearchAlert';
 import BarcodeZxingScan from 'rn-barcode-zxing-scan';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState } from '@/constants/bookState';
 import { useTranslation } from 'react-i18next';
+import { useApiKeyContext } from '@/providers/apiKeyProvider';
 
 const Unfinished = () => {
   const [isDarkMode, setIsDarkMode] = useDarkModeContext();
@@ -50,6 +52,8 @@ const Unfinished = () => {
 
   const [loadingAnimation, setLoadingAnimation] = useState(false);
 
+  const [apiKey] = useApiKeyContext();
+
   const { t } = useTranslation();
 
   function handleAddBook() {
@@ -58,35 +62,61 @@ const Unfinished = () => {
 
   async function handleBookSearch(title: string) {
     Keyboard.dismiss();
-    if (title === '') return;
-    const data = await getBookDetails(title);
-    if (data) {
-      setIsSearchActive(true);
-      setBookSearchResults(await data);
-    } else {
-      Alert.alert(t('book-not-found'), t('no-book-add-manually'));
+    if (title.trim() === '') return;
+    setLoadingAnimation(true);
+    try {
+      const result = await getBookDetails(title, apiKey);
+      if (!result.ok) {
+        alertBookApiFailure(result.kind, t);
+        return;
+      }
+      setBookSearchResults(result.data);
+      setIsSearchActive(result.data.length > 0);
+      if (result.data.length === 0) alertNoResult(t, 'title');
+    } finally {
+      setLoadingAnimation(false);
     }
   }
 
   async function handleBookSearchByIsbn(isbn: string) {
     Keyboard.dismiss();
-    if (isbn === '') return;
-    const data = await getBookByIsbn(isbn);
-    if (data) {
-      setSelectedBook(data);
+    if (isbn.trim() === '') return;
+    setLoadingAnimation(true);
+    try {
+      const result = await getBookByIsbn(isbn, apiKey);
+      if (!result.ok) {
+        alertBookApiFailure(result.kind, t);
+        return;
+      }
+      if (!result.data) {
+        alertNoResult(t, 'isbn');
+        return;
+      }
+      setSelectedBook(result.data);
       setIsbnModal(false);
       router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: BookState.UNFINISHED } });
-    } else {
-      Alert.alert(t('book-not-found'), t('try-search-or-add'));
+    } finally {
+      setLoadingAnimation(false);
     }
   }
 
-  async function handleBookSelection(url: string, state: string) {
-    const res = await axios.get(url);
-    setSelectedBook(await res.data);
-    Keyboard.dismiss();
-    setSearchModal(false);
-    router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: state } });
+  async function handleBookSelection(id: string, state: string) {
+    setLoadingAnimation(true);
+    try {
+      const result = await getVolumeById(id, apiKey);
+      if (!result.ok) {
+        // Stay on the results list: navigating here would open the form filled
+        // with whatever book was selected previously.
+        alertBookApiFailure(result.kind, t);
+        return;
+      }
+      setSelectedBook(result.data);
+      Keyboard.dismiss();
+      setSearchModal(false);
+      router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: state } });
+    } finally {
+      setLoadingAnimation(false);
+    }
   }
 
   function addBookManually(state: string) {
@@ -97,14 +127,20 @@ const Unfinished = () => {
   }
 
   const barcodeScanned = async (barcode: string) => {
-    const data = await getBookByIsbn(barcode);
-    if (data) {
-      setSelectedBook(data);
-      setLoadingAnimation(false);
+    try {
+      const result = await getBookByIsbn(barcode, apiKey);
+      if (!result.ok) {
+        alertBookApiFailure(result.kind, t);
+        return;
+      }
+      if (!result.data) {
+        alertNoResult(t, 'isbn');
+        return;
+      }
+      setSelectedBook(result.data);
       router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: BookState.UNFINISHED } });
-    } else {
+    } finally {
       setLoadingAnimation(false);
-      Alert.alert(t('book-not-found'), t('try-search-or-add'));
     }
   };
 
@@ -263,7 +299,7 @@ const Unfinished = () => {
                 <View key={book.id}>
                   <BookSearchItem
                     book={book}
-                    onPress={() => handleBookSelection(book.selfLink, BookState.UNFINISHED)}
+                    onPress={() => handleBookSelection(book.id, BookState.UNFINISHED)}
                   />
                 </View>
               ))}

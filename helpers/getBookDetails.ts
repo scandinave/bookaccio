@@ -1,14 +1,27 @@
 import axios from 'axios';
+import { BookApiResult, REQUEST_TIMEOUT_MS, buildVolumesUrl, classifyAxiosError, failure, logApiError, sanitizeApiKey, success } from './googleBooksApi';
 
-export const getBookDetails = async (bookTitle: string, apiKey: string) => {
-  if (bookTitle === '') return [];
-  const searchTitle = bookTitle.toLowerCase().split(' ').join('+');
-  const URL = `https://www.googleapis.com/books/v1/volumes?q=${searchTitle}&key=${apiKey}`;
+/**
+ * Searches Google Books by title.
+ *
+ * Resolves to an empty array when there is genuinely no match; every transport,
+ * auth or quota failure comes back as `{ ok: false, kind }` so the caller can
+ * tell the two apart.
+ */
+export const getBookDetails = async (bookTitle: string, apiKey: unknown): Promise<BookApiResult<BookSearchResultProp[]>> => {
+  const query = bookTitle.trim();
+  if (query === '') return success([]);
+
+  const key = sanitizeApiKey(apiKey);
+  if (key === '') return failure('missing-key');
+
   try {
-    const res = await axios.get(URL);
-    return await res.data.items;
+    const res = await axios.get(buildVolumesUrl(encodeURIComponent(query), key), { timeout: REQUEST_TIMEOUT_MS });
+    // Google omits `items` entirely when totalItems is 0.
+    const items = res.data?.items;
+    return success(Array.isArray(items) ? items : []);
   } catch (err) {
-    console.log(err);
-    return undefined;
+    logApiError('title search', err);
+    return failure(classifyAxiosError(err));
   }
 };

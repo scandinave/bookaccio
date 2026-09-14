@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, FlatList, Pressable, TextInput, ScrollView, Keyboard, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Pressable, TextInput, ScrollView, Keyboard, TouchableOpacity, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import BookItem from '@/components/bookItem';
 import { useDarkModeContext } from '@/providers/themeProvider';
@@ -9,7 +9,6 @@ import { useAccentColorContext } from '@/providers/accentColorProvider';
 import Modal from 'react-native-modal';
 import { useFontsContext } from '@/providers/fontProvider';
 import { getBookDetails } from '@/helpers/getBookDetails';
-import axios from 'axios';
 import BookSearchItem from '@/components/bookSearchItem';
 import { useSelectedBookContext } from '@/providers/selectedBookProvider';
 import { router } from 'expo-router';
@@ -17,6 +16,8 @@ import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { getBookList } from '@/helpers/getBookList';
 import { Entypo, MaterialIcons } from '@expo/vector-icons';
 import { getBookByIsbn } from '@/helpers/getBookByIsbn';
+import { getVolumeById } from '@/helpers/getVolumeById';
+import { alertBookApiFailure, alertNoResult } from '@/helpers/bookSearchAlert';
 import BarcodeZxingScan from 'rn-barcode-zxing-scan';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState } from '@/constants/bookState';
@@ -80,35 +81,42 @@ const Home = () => {
 
   async function handleBookSearch(title: string) {
     Keyboard.dismiss();
-    if (title === '') return;
+    if (title.trim() === '') return;
     setLoadingAnimation(true);
-    const data = await getBookDetails(title, apiKey);
-    if (data) {
-      setIsSearchActive(true);
-      setBookSearchResults(await data);
-      setLoadingAnimation(false);
+    try {
+      const result = await getBookDetails(title, apiKey);
+      if (!result.ok) {
+        alertBookApiFailure(result.kind, t);
+        return;
+      }
+      setBookSearchResults(result.data);
       setBookSearchResultsOL([]);
-    } else {
-      Alert.alert(t('book-not-found'), t('no-book-add-manually'));
+      setIsSearchActive(result.data.length > 0);
+      if (result.data.length === 0) alertNoResult(t, 'title');
+    } finally {
       setLoadingAnimation(false);
     }
   }
 
   async function handleBookSearchByIsbn(isbn: string) {
     Keyboard.dismiss();
-    if (isbn === '') return;
+    if (isbn.trim() === '') return;
+    setLoadingAnimation(true);
     try {
-      const data = await getBookByIsbn(isbn, apiKey);
-
-      if (data) {
-        setSelectedBook(data);
-        setIsbnModal(false);
-        router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: BookState.READING } });
-      } else {
-        Alert.alert(t('book-not-found'), t('try-search-or-add'));
+      const result = await getBookByIsbn(isbn, apiKey);
+      if (!result.ok) {
+        alertBookApiFailure(result.kind, t);
+        return;
       }
-    } catch (err) {
-      console.log(err);
+      if (!result.data) {
+        alertNoResult(t, 'isbn');
+        return;
+      }
+      setSelectedBook(result.data);
+      setIsbnModal(false);
+      router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: BookState.READING } });
+    } finally {
+      setLoadingAnimation(false);
     }
   }
 
@@ -129,16 +137,21 @@ const Home = () => {
   // }
 
   async function handleBookSelection(id: string, state: string) {
+    setLoadingAnimation(true);
     try {
-      const url = `https://www.googleapis.com/books/v1/volumes/${id}?&key=${apiKey}`;
-      const res = await axios.get(url);
-      setSelectedBook(res.data);
-    } catch (err) {
-      console.log(err);
-    } finally {
+      const result = await getVolumeById(id, apiKey);
+      if (!result.ok) {
+        // Stay on the results list: navigating here would open the form filled
+        // with whatever book was selected previously.
+        alertBookApiFailure(result.kind, t);
+        return;
+      }
+      setSelectedBook(result.data);
       Keyboard.dismiss();
       setSearchModal(false);
       router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: state } });
+    } finally {
+      setLoadingAnimation(false);
     }
   }
 
@@ -150,14 +163,20 @@ const Home = () => {
   }
 
   const barcodeScanned = async (barcode: string) => {
-    const data = await getBookByIsbn(barcode, apiKey);
-    if (data) {
-      setSelectedBook(data);
-      setLoadingAnimation(false);
+    try {
+      const result = await getBookByIsbn(barcode, apiKey);
+      if (!result.ok) {
+        alertBookApiFailure(result.kind, t);
+        return;
+      }
+      if (!result.data) {
+        alertNoResult(t, 'isbn');
+        return;
+      }
+      setSelectedBook(result.data);
       router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: BookState.READING } });
-    } else {
+    } finally {
       setLoadingAnimation(false);
-      Alert.alert(t('book-not-found'), t('try-search-or-add'));
     }
   };
 
@@ -308,7 +327,7 @@ const Home = () => {
                   <View key={book.id}>
                     <BookSearchItem
                       book={book}
-                      onPress={() => handleBookSelection(`${book.id}`, BookState.READING)}
+                      onPress={() => handleBookSelection(book.id, BookState.READING)}
                     />
                   </View>
                 ))}
