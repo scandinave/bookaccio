@@ -51,10 +51,10 @@ declare interface BookSearchResultProp {
 declare interface Book {
   id: number;
   currentPage: number;
-  authors: string[];
+  authors?: string[];
   categories?: string[];
   description?: string;
-  imageLinks: {
+  imageLinks?: {
     extraLarge?: string;
     large?: string;
     medium?: string;

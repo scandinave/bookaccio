@@ -15,9 +15,36 @@ import { storeBooks } from '@/helpers/storeBooks';
 import BookCover from '@/components/bookCover';
 import { deleteBookCover, persistCoverIfNeeded } from '@/helpers/bookCoverStorage';
 import { getBookList } from '@/helpers/getBookList';
+import { formatCategories } from '@/helpers/formatCategories';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState, BookStateStringProps } from '@/constants/bookState';
 import { useTranslation } from 'react-i18next';
+
+/** Builds the editable form state, tolerating a book that is not loaded yet. */
+function toBookDetails(book?: Book): Book {
+  return {
+    id: book?.id ?? 0,
+    title: book?.title ?? '',
+    subtitle: book?.subtitle ?? '',
+    authors: book?.authors?.length ? book.authors : [''],
+    categories: book?.categories ?? [''],
+    pageCount: book?.pageCount ?? 0,
+    description: book?.description ?? '',
+    imageLinks: { ...(book?.imageLinks ?? {}) },
+    currentPage: book?.currentPage ?? 0,
+    state: book?.state ?? BookState.READING,
+    startDate: book?.startDate ?? Date.now(),
+    endDate: book?.endDate ?? Date.now(),
+    publishedDate: book?.publishedDate?.slice(0, 4) ?? '',
+    language: book?.language,
+    publisher: book?.publisher,
+    isbn: book?.isbn ?? '',
+    notes: book?.notes ?? '',
+    originalTitle: book?.originalTitle ?? '',
+    translator: book?.translator ?? '',
+    review: book?.review ?? '',
+  };
+}
 
 const AddNewBook = () => {
   const { editBook } = useLocalSearchParams();
@@ -54,30 +81,20 @@ const AddNewBook = () => {
     });
   }, []);
 
-  const [bookDetails, setBookDetails] = useState<Book>({
-    id: selectedBook!.id,
-    title: selectedBook!.title,
-    subtitle: selectedBook!.subtitle,
-    authors: selectedBook!.authors,
-    categories: selectedBook!.categories,
-    pageCount: selectedBook!.pageCount,
-    description: selectedBook!.description,
-    imageLinks: {
-      thumbnail: selectedBook?.imageLinks.thumbnail,
-    },
-    currentPage: selectedBook!.currentPage,
-    state: selectedBook?.state,
-    startDate: selectedBook!.startDate,
-    endDate: selectedBook!.endDate,
-    publishedDate: selectedBook!.publishedDate?.slice(0, 4),
-    language: selectedBook!.language,
-    publisher: selectedBook!.publisher,
-    isbn: selectedBook!.isbn,
-    notes: selectedBook?.notes,
-    originalTitle: selectedBook?.originalTitle,
-    translator: selectedBook?.translator,
-    review: selectedBook?.review,
-  });
+  const [bookDetails, setBookDetails] = useState<Book>(() => toBookDetails(selectedBook));
+
+  const [hydrated, setHydrated] = useState(!!selectedBook);
+
+  // fullBookList is filled by the effect above, so the initialiser can run
+  // before the book is known. Fill the form in once it arrives, and only once,
+  // so it never overwrites something the user has already typed.
+  useEffect(() => {
+    if (hydrated || !selectedBook) return;
+    setBookDetails(toBookDetails(selectedBook));
+    setHydrated(true);
+  }, [selectedBook?.id, hydrated]);
+
+  if (!selectedBook) return null;
 
   const statusData: { title: string; value: BookStateStringProps }[] = [
     { title: t('reading'), value: BookState.READING },
@@ -129,7 +146,7 @@ const AddNewBook = () => {
   }
 
   function handleEditBook() {
-    if (bookDetails.title === '' || bookDetails.authors[0] === '' || bookDetails.pageCount === 0) {
+    if (bookDetails.title === '' || !bookDetails.authors?.[0] || bookDetails.pageCount === 0) {
       Alert.alert(t('error'), t('title-mandatory'));
       return;
     }
@@ -173,7 +190,7 @@ const AddNewBook = () => {
         <View>
           <CustomInput
             label={t('author')}
-            value={bookDetails.authors[0]}
+            value={bookDetails.authors?.[0] ?? ''}
             onChangeText={(value) => setBookDetails({ ...bookDetails, authors: [value] })}
           />
         </View>
@@ -214,7 +231,7 @@ const AddNewBook = () => {
         <View>
           <CustomInput
             label={t('category')}
-            value={bookDetails.categories ? [...new Set([...bookDetails.categories!.join(' /').split('/')])].join('/') : ['']}
+            value={formatCategories(bookDetails.categories)}
             onChangeText={(value) => {
               setBookDetails({ ...bookDetails, categories: [value.split(',').join('/')] });
             }}

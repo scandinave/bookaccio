@@ -142,7 +142,7 @@ const AddNewBook = () => {
   }
 
   function handleAddBook() {
-    if (bookDetails.title === '' || bookDetails.authors[0] === '' || bookDetails.pageCount === 0) {
+    if (bookDetails.title === '' || !bookDetails.authors?.[0] || bookDetails.pageCount === 0) {
       Alert.alert(t('error'), t('title-mandatory'));
       return;
     }
@@ -186,7 +186,7 @@ const AddNewBook = () => {
         <View>
           <CustomInput
             label={t('author')}
-            value={bookDetails.authors[0]}
+            value={bookDetails.authors?.[0] ?? ''}
             onChangeText={(value) => setBookDetails({ ...bookDetails, authors: [value] })}
           />
         </View>

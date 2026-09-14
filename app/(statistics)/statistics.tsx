@@ -66,7 +66,7 @@ const Statistics = () => {
       }
     }
 
-    stats.authorsRead.push(...book.authors.map((author) => author));
+    if (book.authors?.length) stats.authorsRead.push(...book.authors);
   });
 
   let count = 0;

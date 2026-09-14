@@ -9,6 +9,7 @@ import * as Progress from 'react-native-progress';
 import Modal from 'react-native-modal';
 import { MaterialIcons } from '@expo/vector-icons/';
 import { formatDate } from '@/helpers/formatDate';
+import { formatCategories } from '@/helpers/formatCategories';
 import GlobalDateTimePicker from 'react-native-global-datetimepicker';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { storeBooks } from '@/helpers/storeBooks';
@@ -47,21 +48,23 @@ const BookDetails = () => {
 
   const [isRatingModalVisible, setIsRatinModalVisible] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(book?.currentPage);
+  const [currentPage, setCurrentPage] = useState(book?.currentPage ?? 0);
 
-  const [pageCount, setPageCount] = useState(book?.pageCount);
+  const [pageCount, setPageCount] = useState(book?.pageCount ?? 0);
 
-  const [bookProgress, setBookProgress] = useState(book!.currentPage / book!.pageCount);
+  const [bookProgress, setBookProgress] = useState(book?.pageCount ? book.currentPage / book.pageCount : 0);
 
-  const [startDate, setStartDate] = useState(new Date(book!.startDate));
+  const [startDate, setStartDate] = useState(() => new Date(book?.startDate ?? Date.now()));
 
-  const [endDate, setEndDate] = useState(new Date(book!.endDate));
+  const [endDate, setEndDate] = useState(() => new Date(book?.endDate ?? Date.now()));
 
-  const [rating, setRating] = useState(book!.rating);
+  const [rating, setRating] = useState(book?.rating ?? 0);
 
   const { t } = useTranslation();
 
-  const regexNumber = /\d/g;
+  // No `g` flag: it makes `test()` advance lastIndex, so two consecutive calls
+  // on the same object alternate and a valid entry is rejected every other time.
+  const regexNumber = /\d/;
 
   function handleTextExpansion() {
     numOfLines !== 0 ? setNumOfLines(0) : setNumOfLines(4);
@@ -72,6 +75,18 @@ const BookDetails = () => {
       setFullBookList([...data]);
     });
   }, []);
+
+  // The list is loaded asynchronously, so the initialisers above run before the
+  // book is known. Pick the real values up once it arrives.
+  useEffect(() => {
+    if (!book) return;
+    setCurrentPage(book.currentPage);
+    setPageCount(book.pageCount);
+    setBookProgress(book.pageCount ? book.currentPage / book.pageCount : 0);
+    setStartDate(new Date(book.startDate));
+    setEndDate(new Date(book.endDate));
+    setRating(book.rating ?? 0);
+  }, [book?.id]);
 
   const updateBookDetails = ({ id, authors, currentPage, pageCount, categories, description, endDate, publishedDate, publisher, rating, startDate, state, subtitle, title, isbn }: BookOptional) => {
     const updatedBooklist: Book[] = fullBookList.map((book) => {
@@ -108,8 +123,8 @@ const BookDetails = () => {
   function handleProgressDetails(id: number) {
     if (!regexNumber.test(currentPage!.toString()) || !regexNumber.test(pageCount!.toString())) {
       Alert.alert(t('error'), t('invalid-num-msg'));
-      setCurrentPage(book?.currentPage || 0);
-      setPageCount(book?.pageCount);
+      setCurrentPage(book?.currentPage ?? 0);
+      setPageCount(book?.pageCount ?? 0);
       return;
     }
 
@@ -260,7 +275,7 @@ const BookDetails = () => {
   }
 
   if (!book) {
-    null;
+    return null;
   } else {
     return (
       <ScrollView
@@ -279,7 +294,7 @@ const BookDetails = () => {
             <Text style={[styles.title, { fontFamily: `${font}B`, color: isDarkMode ? Colors.light : accentColor }]}>{book?.title}</Text>
           </View>
           {book?.subtitle && <Text style={[styles.subtitle, { fontFamily: `${font}B`, color: isDarkMode ? Colors.light : Colors.dark }]}>{book?.subtitle}</Text>}
-          <Text style={(styles.author, [styles.author, { fontFamily: `${font}B`, color: isDarkMode ? Colors.light : Colors.dark }])}>{book?.authors[0]}</Text>
+          <Text style={(styles.author, [styles.author, { fontFamily: `${font}B`, color: isDarkMode ? Colors.light : Colors.dark }])}>{book?.authors?.[0]}</Text>
 
           {additionalDetailsShown && (
             <View style={[styles.additionalInfo]}>
@@ -316,7 +331,7 @@ const BookDetails = () => {
           >
             {handleBookRatingStar(rating)}
           </Pressable>
-          <Text style={[styles.category, { fontFamily: `${font}R`, color: isDarkMode ? Colors.light : Colors.dark }]}>{[...new Set([...book!.categories!.join(' /').split('/')])].join('/')}</Text>
+          <Text style={[styles.category, { fontFamily: `${font}R`, color: isDarkMode ? Colors.light : Colors.dark }]}>{formatCategories(book?.categories)}</Text>
           {book?.description && (
             <Text
               onPress={handleTextExpansion}

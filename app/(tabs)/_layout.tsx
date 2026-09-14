@@ -44,7 +44,7 @@ const TabsLayout = () => {
   useEffect(() => {
     if (isScreenFocused && searchTxt !== '') {
       getBookList().then((data: Book[]) => {
-        setFullBookList([...data.filter((book) => book.title?.toLowerCase().includes(searchTxt.toLowerCase()) || book?.authors.join(',').toLowerCase().includes(searchTxt.toLowerCase()))]);
+        setFullBookList([...data.filter((book) => book.title?.toLowerCase().includes(searchTxt.toLowerCase()) || (book?.authors ?? []).join(',').toLowerCase().includes(searchTxt.toLowerCase()))]);
       });
     } else {
       getBookList().then((data) => {
@@ -61,7 +61,7 @@ const TabsLayout = () => {
     } else {
       getBookList().then((data: Book[]) => {
         let tempArr = data.filter((book) => {
-          return book?.title!.toLowerCase().includes(value.toLowerCase()) || book?.authors.join(',').toLowerCase().includes(value.toLowerCase());
+          return book?.title!.toLowerCase().includes(value.toLowerCase()) || (book?.authors ?? []).join(',').toLowerCase().includes(value.toLowerCase());
         });
         setFullBookList(tempArr);
       });
