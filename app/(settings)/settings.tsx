@@ -159,15 +159,15 @@ const Settings = () => {
       }
       setData('apiKey', apiKey);
       setShowApiModal(false);
-      Alert.alert('Success', 'Your Google Books API Key has been updated');
+      Alert.alert(t('success'), t('api-key-updated'));
     });
   }
 
   function deleteApiKey() {
-    Alert.alert('Do you want to delete your API Key?', 'This will delete your API permanently. Do you want to coninue?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('confirm-delete-api-key'), t('confirm-delete-api-key-msg'), [
+      { text: t('cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('delete'),
         style: 'default',
         onPress: () => {
           setApiKey('');
@@ -220,7 +220,7 @@ const Settings = () => {
           </View>
           <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? 'rgba(15,15,15,0.3)' : 'rgba(200,200,200,0.3)' }]}>
             <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end' }]}>
-              <Text style={[styles.subheading, { color: isDarkMode ? Colors.light : Colors.dark }]}>Google Books API Key</Text>
+              <Text style={[styles.subheading, { color: isDarkMode ? Colors.light : Colors.dark }]}>{t('api-key-section')}</Text>
               <Pressable
                 style={[{ paddingLeft: 10 }]}
                 onPress={() => setShowInfoModal(true)}
@@ -235,15 +235,15 @@ const Settings = () => {
               </Pressable>
             </View>
             <View style={[{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }]}>
-              <Text style={[styles.text, { color: isDarkMode ? Colors.light : Colors.dark }]}>My API Key:</Text>
+              <Text style={[styles.text, { color: isDarkMode ? Colors.light : Colors.dark }]}>{t('my-api-key')}</Text>
               <View style={[styles.apiBox, { borderColor: isDarkMode ? Colors.light : Colors.dark }]}>
-                <Text style={[styles.text, { color: isDarkMode ? Colors.light : Colors.dark }]}>{hideApiKey ? '*********************' : apiKey !== '' ? apiKey : 'No API Key'}</Text>
+                <Text style={[styles.text, { color: isDarkMode ? Colors.light : Colors.dark }]}>{hideApiKey ? '*********************' : apiKey !== '' ? apiKey : t('no-api-key')}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => setHideApiKey(!hideApiKey)}
                 style={[styles.btn, { backgroundColor: accentColor }]}
               >
-                <Text style={[styles.text]}>{hideApiKey ? 'Show' : 'Hide'}</Text>
+                <Text style={[styles.text]}>{hideApiKey ? t('show') : t('hide')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -251,13 +251,13 @@ const Settings = () => {
               style={[styles.btn, { backgroundColor: accentColor, alignItems: 'center' }]}
               onPress={() => setShowApiModal(true)}
             >
-              <Text style={[styles.text]}>Update API Key</Text>
+              <Text style={[styles.text]}>{t('update-api-key')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={deleteApiKey}
               style={[styles.btn, { backgroundColor: accentColor, alignItems: 'center' }]}
             >
-              <Text style={[styles.text]}>Delete API Key</Text>
+              <Text style={[styles.text]}>{t('delete-api-key')}</Text>
             </TouchableOpacity>
           </View>
           <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? 'rgba(15,15,15,0.3)' : 'rgba(200,200,200,0.3)' }]}>
@@ -407,7 +407,7 @@ const Settings = () => {
         >
           <View style={[styles.modalContainer]}>
             <TextInput
-              placeholder="Please Enter your Google Books API Key"
+              placeholder={t('enter-api-key')}
               placeholderTextColor={Colors.dark}
               style={[styles.text, { color: Colors.dark }]}
               value={apiKey}
@@ -419,7 +419,7 @@ const Settings = () => {
               onPressIn={handleAPIKey}
               style={[styles.btn, { backgroundColor: accentColor }]}
             >
-              <Text style={[styles.text]}>UPDATE</Text>
+              <Text style={[styles.text]}>{t('update').toUpperCase()}</Text>
             </TouchableOpacity>
           </View>
         </Modal>
@@ -434,7 +434,7 @@ const Settings = () => {
                 style={[styles.btn, { backgroundColor: accentColor }]}
                 onPress={() => setShowInfoModal(false)}
               >
-                <Text style={styles.text}>Take me back</Text>
+                <Text style={styles.text}>{t('take-me-back')}</Text>
               </TouchableOpacity>
             </View>
           </View>
