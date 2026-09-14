@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, Pressable } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Alert, Pressable } from 'react-native';
 import React, { useState } from 'react';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useDarkModeContext } from '@/providers/themeProvider';
@@ -11,7 +11,7 @@ import Modal from 'react-native-modal';
 import { getBookList } from '@/helpers/getBookList';
 import { storeBooks } from '@/helpers/storeBooks';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
-import { processUrl } from '@/helpers/processUrl';
+import BookCover from '@/components/bookCover';
 import { deleteBookCover } from '@/helpers/bookCoverStorage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { usePageNumberShownContext } from '@/providers/options/showPageNumberProvider';
@@ -19,8 +19,6 @@ import { useRatingShownContext } from '@/providers/options/showRatingProvider';
 import { useUnfinishedContext } from '@/providers/options/showUnfinishedProvider';
 import { BookState, BookStateStringProps } from '@/constants/bookState';
 import { useTranslation } from 'react-i18next';
-
-const bookCoverPlaceholder = require('@/assets/images/others/book-cover-placeholder.png');
 
 const BookItem = ({ data }: { data: Book }) => {
   const [isDarkMode, setIsDarkMode] = useDarkModeContext();
@@ -191,9 +189,9 @@ const BookItem = ({ data }: { data: Book }) => {
           ) : null}
 
           <View>
-            <Image
+            <BookCover
               style={styles.image}
-              source={data.imageLinks.thumbnail !== '' ? { uri: processUrl(data.imageLinks.thumbnail) } : bookCoverPlaceholder}
+              uri={data?.imageLinks?.thumbnail}
             />
           </View>
           <View style={styles.midContent}>
@@ -255,9 +253,9 @@ const BookItem = ({ data }: { data: Book }) => {
         onBackdropPress={() => setIsModalVisible(false)}
       >
         <View style={[styles.modal, { backgroundColor: isDarkMode ? Colors.black : Colors.light }]}>
-          <Image
+          <BookCover
             style={styles.imageModal}
-            source={data.imageLinks.thumbnail !== '' ? { uri: processUrl(data.imageLinks.thumbnail) } : bookCoverPlaceholder}
+            uri={data?.imageLinks?.thumbnail}
           />
           <View>
             <Text style={[styles.modalTitle, { color: isDarkMode ? Colors.light : Colors.dark }]}>{data?.title}</Text>

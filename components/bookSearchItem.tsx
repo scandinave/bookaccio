@@ -1,8 +1,7 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import React from 'react';
-import bookCoverPlaceholder from '../assets/images/others/book-cover-placeholder.png';
 import { useFontsContext } from '@/providers/fontProvider';
-import { processUrl } from '@/helpers/processUrl';
+import BookCover from '@/components/bookCover';
 
 const BookSearchItem = ({ book, onPress }: { book: BookSearchResultProp; onPress: any }) => {
     const [font, setFont] = useFontsContext();
@@ -14,9 +13,9 @@ const BookSearchItem = ({ book, onPress }: { book: BookSearchResultProp; onPress
                 onPress={onPress}
             >
                 <View style={styles.modalBookItem}>
-                    <Image
+                    <BookCover
                         style={styles.modalImage}
-                        source={book?.volumeInfo?.imageLinks && book?.volumeInfo?.imageLinks?.thumbnail !== '' ? { uri: processUrl(book?.volumeInfo?.imageLinks?.thumbnail) } : bookCoverPlaceholder}
+                        uri={book?.volumeInfo?.imageLinks?.thumbnail}
                     />
                     <View style={{ width: '70%' }}>
                         <Text style={[styles.modalBookTitle, { fontFamily: `${font}B` }]}>{book?.volumeInfo?.title}</Text>

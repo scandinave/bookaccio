@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, Image, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useFontsContext } from '@/providers/fontProvider';
@@ -9,11 +9,10 @@ import * as ImagePicker from 'expo-image-picker';
 import CustomInput from '@/components/customInput';
 import { Dropdown } from 'react-native-element-dropdown';
 import Modal from 'react-native-modal';
-import bookCoverPlaceholder from '../../assets/images/others/book-cover-placeholder.png';
 
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { storeBooks } from '@/helpers/storeBooks';
-import { processUrl } from '@/helpers/processUrl';
+import BookCover from '@/components/bookCover';
 import { deleteBookCover, persistCoverIfNeeded } from '@/helpers/bookCoverStorage';
 import { getBookList } from '@/helpers/getBookList';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
@@ -157,9 +156,9 @@ const AddNewBook = () => {
     >
       <View>
         <TouchableOpacity onPress={() => setIsFirstModalVisible(true)}>
-          <Image
+          <BookCover
             style={styles.image}
-            source={imgUrl !== '' ? { uri: processUrl(imgUrl) } : selectedBook?.imageLinks.thumbnail && selectedBook?.imageLinks.thumbnail !== '' ? { uri: processUrl(selectedBook.imageLinks.thumbnail) } : bookCoverPlaceholder}
+            uri={imgUrl || bookDetails.imageLinks?.thumbnail}
           />
         </TouchableOpacity>
       </View>

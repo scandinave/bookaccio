@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, Image, Pressable, TextInput, Alert, Keyboard, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable, TextInput, Alert, Keyboard, TouchableOpacity } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { useFontsContext } from '@/providers/fontProvider';
@@ -12,7 +12,7 @@ import { formatDate } from '@/helpers/formatDate';
 import GlobalDateTimePicker from 'react-native-global-datetimepicker';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { storeBooks } from '@/helpers/storeBooks';
-import { processUrl } from '@/helpers/processUrl';
+import BookCover from '@/components/bookCover';
 import { processInterjections } from '@/helpers/processInterjections';
 import { processDuration } from '@/helpers/processDuration';
 import { getBookList } from '@/helpers/getBookList';
@@ -21,8 +21,6 @@ import { readingMotivation } from '@/helpers/readingMotivation';
 import { BookState } from '@/constants/bookState';
 import { useShowAdditionalDetailsContext } from '@/providers/options/showAdditionalDetails';
 import { useTranslation } from 'react-i18next';
-
-const bookCoverPlaceholder = require('@/assets/images/others/book-cover-placeholder.png');
 
 const BookDetails = () => {
   const { bookdetails } = useLocalSearchParams();
@@ -270,9 +268,9 @@ const BookDetails = () => {
         contentContainerStyle={styles.contentContainer}
       >
         <View>
-          <Image
+          <BookCover
             style={styles.thumbnailImage}
-            source={book?.imageLinks.thumbnail !== '' ? { uri: processUrl(book?.imageLinks.thumbnail) } : bookCoverPlaceholder}
+            uri={book?.imageLinks?.thumbnail}
           />
         </View>
 
