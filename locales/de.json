@@ -132,6 +132,7 @@
   "invalid-isbn": "Ungültige ISBN",
   "invalid-isbn-msg": "Dieser Code ist keine gültige 10- oder 13-stellige ISBN.",
   "unexpected-error-msg": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  "image-pick-failed": "Das Bild konnte nicht geladen werden. Bitte wähle ein anderes.",
   "warn-delete-book": "Dadurch wird das Buch aus deiner Bibliothek gelöscht",
   "sure-to-continue": "Bist du sicher, dass du fortfahren möchtest?",
   "yes": "Ja",

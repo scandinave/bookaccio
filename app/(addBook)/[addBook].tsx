@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, ScrollView, Image, Alert, TouchableOpacity } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useFontsContext } from '@/providers/fontProvider';
 import { useAccentColorContext } from '@/providers/accentColorProvider';
@@ -15,6 +15,7 @@ import bookCoverPlaceholder from '../../assets/images/others/book-cover-placehol
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { storeBooks } from '@/helpers/storeBooks';
 import { processUrl } from '@/helpers/processUrl';
+import { persistCoverIfNeeded } from '@/helpers/bookCoverStorage';
 import { getBookList } from '@/helpers/getBookList';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState, BookStateStringProps } from '@/constants/bookState';
@@ -45,6 +46,8 @@ const AddNewBook = () => {
   const [isFirstModalVisible, setIsFirstModalVisible] = useState(false);
 
   const [isUrlModalVisible, setIsUrlModalVisible] = useState(false);
+
+  const pendingCoverAction = useRef<'gallery' | 'url' | null>(null);
 
   const [imgUrl, setImgUrl] = useState('');
 
@@ -114,19 +117,28 @@ const AddNewBook = () => {
   }
 
   function handleImageChange() {
-    setBookDetails({ ...bookDetails, imageLinks: { thumbnail: imgUrl } });
+    setBookDetails((prev) => ({ ...prev, imageLinks: { ...prev.imageLinks, thumbnail: imgUrl } }));
     setIsUrlModalVisible(false);
   }
 
   async function handleGalleryImage() {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      aspect: [10, 16],
-      allowsEditing: true,
-      quality: 1,
-    });
-    if (!result.canceled) {
-      setImgUrl(result.assets[0].uri);
-      setBookDetails({ ...bookDetails, imageLinks: { thumbnail: result.assets[0].uri } });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        aspect: [10, 16],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets?.length) return;
+
+      const pickedUri = result.assets[0].uri;
+      setImgUrl(pickedUri);
+      setBookDetails((prev) => ({ ...prev, imageLinks: { ...prev.imageLinks, thumbnail: pickedUri } }));
+    } catch (err) {
+      // Without this the rejection was an unhandled promise: a red box in dev,
+      // a silent no-op in release.
+      console.log('[cover] gallery pick failed:', err instanceof Error ? err.message : err);
+      Alert.alert(t('error'), t('image-pick-failed'));
     }
   }
 
@@ -136,11 +148,15 @@ const AddNewBook = () => {
       return;
     }
 
-    let updatedBookList = fullBookList;
+    // Copy a freshly picked image out of the volatile ImagePicker cache first.
+    const bookToSave: Book = {
+      ...bookDetails,
+      imageLinks: { ...bookDetails.imageLinks, thumbnail: persistCoverIfNeeded(bookDetails.imageLinks?.thumbnail, bookDetails.id) },
+    };
 
-    updatedBookList.push(bookDetails);
+    const updatedBookList = [...fullBookList, bookToSave];
 
-    setFullBookList([...updatedBookList]);
+    setFullBookList(updatedBookList);
 
     storeBooks(updatedBookList);
 
@@ -288,15 +304,26 @@ const AddNewBook = () => {
       </View>
       <Modal
         isVisible={isFirstModalVisible}
-        onBackdropPress={() => setIsFirstModalVisible(false)}
+        onBackdropPress={() => {
+          pendingCoverAction.current = null;
+          setIsFirstModalVisible(false);
+        }}
+        onModalHide={() => {
+          // Run the chosen action only once the modal is fully gone: launching a
+          // native activity (or opening the next modal) mid-animation is racy.
+          const action = pendingCoverAction.current;
+          pendingCoverAction.current = null;
+          if (action === 'gallery') handleGalleryImage();
+          else if (action === 'url') setIsUrlModalVisible(true);
+        }}
       >
         <View style={[styles.modal, { backgroundColor: accentColor }]}>
           <View style={[styles.largeBtnContainer]}>
             <TouchableOpacity
               style={[styles.largeBtn]}
               onPress={() => {
+                pendingCoverAction.current = 'url';
                 setIsFirstModalVisible(false);
-                setIsUrlModalVisible(true);
               }}
             >
               <Text style={[styles.largeBtnTxt, { fontFamily: `${font}B` }]}>{t('set-image-url')}</Text>
@@ -304,8 +331,8 @@ const AddNewBook = () => {
             <TouchableOpacity
               style={[styles.largeBtn]}
               onPress={() => {
+                pendingCoverAction.current = 'gallery';
                 setIsFirstModalVisible(false);
-                handleGalleryImage();
               }}
             >
               <Text style={[styles.largeBtnTxt, { fontFamily: `${font}B` }]}>{t('select-image-gallery')}</Text>

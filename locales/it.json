@@ -132,6 +132,7 @@
   "invalid-isbn": "ISBN non valido",
   "invalid-isbn-msg": "Questo codice non è un ISBN valido a 10 o 13 cifre.",
   "unexpected-error-msg": "Si è verificato un errore. Riprova.",
+  "image-pick-failed": "Impossibile caricare l'immagine. Provane un'altra.",
   "warn-delete-book": "In questo modo il libro verrà eliminato dalla libreria",
   "sure-to-continue": "Sei sicuro di voler continuare?",
   "yes": "Sì",

@@ -12,6 +12,7 @@ import { getBookList } from '@/helpers/getBookList';
 import { storeBooks } from '@/helpers/storeBooks';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { processUrl } from '@/helpers/processUrl';
+import { deleteBookCover } from '@/helpers/bookCoverStorage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { usePageNumberShownContext } from '@/providers/options/showPageNumberProvider';
 import { useRatingShownContext } from '@/providers/options/showRatingProvider';
@@ -43,16 +44,15 @@ const BookItem = ({ data }: { data: Book }) => {
   const percentCompleted = Math.round((Number(data.currentPage) / Number(data.pageCount)) * 100);
 
   const deleteBook = (id: number) => {
-    getBookList().then((data) => {
-      data.map((book: Book) => {
-        if (book.id === id) {
-          data.splice(data.indexOf(book), 1);
-        }
-      });
+    getBookList().then((data: Book[]) => {
+      const removed = data.find((book) => book.id === id);
+      const remaining = data.filter((book) => book.id !== id);
 
-      setFullBookList([...data]);
+      setFullBookList(remaining);
 
-      storeBooks(data).then(() => {
+      storeBooks(remaining).then(() => {
+        // Drop the cover file too, otherwise it stays in the document directory forever.
+        deleteBookCover(removed?.imageLinks?.thumbnail);
         setIsModalVisible(false);
       });
     });
