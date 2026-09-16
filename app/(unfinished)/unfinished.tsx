@@ -14,6 +14,7 @@ import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState } from '@/constants/bookState';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Unfinished = () => {
   const [isDarkMode, setIsDarkMode] = useDarkModeContext();
@@ -28,6 +29,7 @@ const Unfinished = () => {
   const [fullBookList] = useFullBookListContext();
 
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   // One implementation for all four list screens: a change here cannot miss one.
   const {
@@ -65,16 +67,16 @@ const Unfinished = () => {
         data={fullBookList}
         extraData={fullBookList}
         renderItem={({ item }) => <View>{item.state === BookState.UNFINISHED ? <BookItem data={item} /> : null}</View>}
-        ListFooterComponent={() => <View style={{ height: 10 }} />}
+        ListFooterComponent={() => <View style={{ height: 10 + insets.bottom }} />}
         // onScrollBeginDrag={() => setHidePlusBtn(true)}
         // onScrollEndDrag={() => setHidePlusBtn(false)}
         // onMomentumScrollBegin={() => setHidePlusBtn(true)}
         // onMomentumScrollEnd={() => setHidePlusBtn(false)}
       />
-      <View style={{ height: 75 }}>
+      <View style={{ height: 75 + insets.bottom }}>
         <Pressable
           onPress={handleAddBook}
-          style={styles.plusIcon}
+          style={[styles.plusIcon, { bottom: 10 + insets.bottom }]}
         >
           {hidePlusBtn ? null : (
             <MaterialCommunityIcons
@@ -88,7 +90,7 @@ const Unfinished = () => {
           onPress={() => {
             router.back();
           }}
-          style={styles.backIcon}
+          style={[styles.backIcon, { bottom: 10 + insets.bottom }]}
         >
           {hidePlusBtn ? null : (
             <MaterialCommunityIcons

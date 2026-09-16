@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, ScrollView, Pressable, TouchableOpacity } from 
 import React from 'react';
 import { Colors } from '@/constants/Colors';
 import { useDarkModeContext } from '@/providers/themeProvider';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAccentColorContext } from '@/providers/accentColorProvider';
 import * as WebBrowser from 'expo-web-browser';
 import { versionNum } from '@/constants/versionNum';
@@ -10,6 +10,8 @@ import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { Link } from 'expo-router';
 
 const About = () => {
+  const insets = useSafeAreaInsets();
+
   const [isDarkMode, setIsDarkMode] = useDarkModeContext();
 
   const [accentColor, setAccentColor] = useAccentColorContext();
@@ -34,9 +36,8 @@ const About = () => {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: isBlackTheme ? Colors.fullBlack : isDarkMode ? Colors.dark : Colors.light }]}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top, paddingBottom: 40 + insets.bottom }]}
     >
-      <SafeAreaView>
         <View style={{ width: '100%' }}>
           <Text style={[styles.title, { color: accentColor }]}>About</Text>
         </View>
@@ -129,7 +130,6 @@ const About = () => {
             />
           </Pressable>
         </View>
-      </SafeAreaView>
     </ScrollView>
   );
 };

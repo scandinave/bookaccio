@@ -22,8 +22,11 @@ import { readingMotivation } from '@/helpers/readingMotivation';
 import { BookState } from '@/constants/bookState';
 import { useShowAdditionalDetailsContext } from '@/providers/options/showAdditionalDetails';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BookDetails = () => {
+  const insets = useSafeAreaInsets();
+
   const { bookdetails } = useLocalSearchParams();
 
   if (Array.isArray(bookdetails)) throw new Error("bookdetails should't be an array");
@@ -280,7 +283,7 @@ const BookDetails = () => {
     return (
       <ScrollView
         style={[styles.container, { backgroundColor: isBlackTheme ? Colors.fullBlack : isDarkMode ? Colors.black : Colors.light }]}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: 50 + insets.bottom }]}
       >
         <View>
           <BookCover

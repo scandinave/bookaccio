@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import Icon from '@expo/vector-icons/MaterialCommunityIcons';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { useAccentColorContext } from '@/providers/accentColorProvider';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
@@ -13,6 +14,7 @@ const TabsLayout = () => {
   const [accentColor] = useAccentColorContext();
   const [isBlackTheme] = useBlackThemeContext();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   // Stays here rather than in BookListLayout: it only ever feeds `tabBarIcon`,
   // and the navigator is the one thing each route declares for itself.
@@ -37,7 +39,9 @@ const TabsLayout = () => {
           tabBarShowLabel: false,
           tabBarStyle: {
             backgroundColor: isBlackTheme ? Colors.closeBlack : isDarkMode ? Colors.dark : Colors.light,
-            height: 70,
+            // @react-navigation/bottom-tabs returns a numeric `height` as-is and
+            // drops its own inset maths, so the bar must carry the inset itself.
+            height: 70 + insets.bottom,
             borderColor: isBlackTheme ? Colors.closeBlack : isDarkMode ? Colors.dark : Colors.light,
             paddingTop: 16,
             borderWidth: 0,

@@ -1,6 +1,6 @@
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View, Switch, Pressable } from 'react-native';
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDarkModeContext } from '@/providers/themeProvider';
 import { Colors } from '@/constants/Colors';
 import SettingItem from '@/components/settingItem';
@@ -31,6 +31,8 @@ import { Feather } from '@expo/vector-icons';
 import ApiKeyInstructions from '@/components/apiKeyInstructions';
 
 const Settings = () => {
+  const insets = useSafeAreaInsets();
+
   const [isDarkMode, setIsDarkMode] = useDarkModeContext();
 
   const [accentColor, setAccentColor] = useAccentColorContext();
@@ -147,9 +149,8 @@ const Settings = () => {
   return (
     <ScrollView
       style={[{ backgroundColor: isBlackTheme ? Colors.fullBlack : isDarkMode ? Colors.black : Colors.light }]}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top, paddingBottom: 50 + insets.bottom }]}
     >
-      <SafeAreaView>
         <View style={styles.headerContainer}>
           <Text style={[styles.headerTitle, { color: accentColor }]}>{t('settings')}</Text>
         </View>
@@ -335,7 +336,6 @@ const Settings = () => {
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
     </ScrollView>
   );
 };

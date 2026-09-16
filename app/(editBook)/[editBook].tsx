@@ -19,6 +19,7 @@ import { formatCategories } from '@/helpers/formatCategories';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState, BookStateStringProps } from '@/constants/bookState';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Builds the editable form state, tolerating a book that is not loaded yet. */
 function toBookDetails(book?: Book): Book {
@@ -47,6 +48,8 @@ function toBookDetails(book?: Book): Book {
 }
 
 const AddNewBook = () => {
+  const insets = useSafeAreaInsets();
+
   const { editBook } = useLocalSearchParams();
 
   if (Array.isArray(editBook)) {
@@ -169,7 +172,7 @@ const AddNewBook = () => {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: isBlackTheme ? Colors.fullBlack : isDarkMode ? Colors.black : Colors.light }]}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[styles.contentContainer, { paddingBottom: 40 + insets.bottom }]}
     >
       <View>
         <TouchableOpacity onPress={() => setIsFirstModalVisible(true)}>

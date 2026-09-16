@@ -6,8 +6,11 @@ import { Colors } from '@/constants/Colors';
 import { useDarkModeContext } from '@/providers/themeProvider';
 import { useAccentColorContext } from '@/providers/accentColorProvider';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PagesLayout = () => {
+  const insets = useSafeAreaInsets();
+
   const { bookdetails } = useLocalSearchParams();
 
   const [isDarkMode, setIsDarkMode] = useDarkModeContext();
@@ -26,7 +29,7 @@ const PagesLayout = () => {
 
   return (
     <>
-      <View style={[styles.header, { backgroundColor: accentColor, borderColor: accentColor }]}>
+      <View style={[styles.header, { backgroundColor: accentColor, borderColor: accentColor, height: 90 + insets.top, paddingTop: insets.top }]}>
         <View style={styles.headerInner}>
           <View style={styles.backIconContainer}>
             <Pressable

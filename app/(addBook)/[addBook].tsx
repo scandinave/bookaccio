@@ -19,8 +19,11 @@ import { getBookList } from '@/helpers/getBookList';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState, BookStateStringProps } from '@/constants/bookState';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const AddNewBook = () => {
+  const insets = useSafeAreaInsets();
+
   const { addBook }: { addBook: BookStateStringProps } = useLocalSearchParams();
 
   if (Array.isArray(addBook)) {
@@ -160,7 +163,7 @@ const AddNewBook = () => {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: isBlackTheme ? Colors.fullBlack : isDarkMode ? Colors.black : Colors.light }]}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[styles.contentContainer, { paddingBottom: 40 + insets.bottom }]}
     >
       <View>
         <TouchableOpacity onPress={() => setIsFirstModalVisible(true)}>

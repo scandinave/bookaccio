@@ -6,6 +6,7 @@ import Modal from 'react-native-modal';
 import React, { useEffect, useRef, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { getBookList } from '@/helpers/getBookList';
 import { storeBooks } from '@/helpers/storeBooks';
@@ -34,22 +35,19 @@ export default function BookListLayout({ children, showUnfinishedLink = false }:
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
   const [searchTxt, setSearchTxt] = useState('');
 
-  const textInputRef = useRef<TextInput>(null);
   const isScreenFocused = useIsFocused();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
-  // Pre-existing quirk kept as-is: `searchTxt` is read here but absent from the
-  // dependency array, so this only re-runs on focus changes.
+  // Read inside the focus effect without re-running it on every keystroke:
+  // live typing already goes through onSearch.
+  const searchTxtRef = useRef(searchTxt);
+  searchTxtRef.current = searchTxt;
+
+  // Re-apply the current filter when the screen regains focus. onSearch('')
+  // reloads the unfiltered list, which is what the blur case wants.
   useEffect(() => {
-    if (isScreenFocused && searchTxt !== '') {
-      getBookList().then((data: Book[]) => {
-        setFullBookList([...data.filter((book) => book.title?.toLowerCase().includes(searchTxt.toLowerCase()) || (book?.authors ?? []).join(',').toLowerCase().includes(searchTxt.toLowerCase()))]);
-      });
-    } else {
-      getBookList().then((data) => {
-        setFullBookList([...data]);
-      });
-    }
+    onSearch(isScreenFocused ? searchTxtRef.current : '');
   }, [isScreenFocused]);
 
   function onSearch(value: string) {
@@ -76,9 +74,7 @@ export default function BookListLayout({ children, showUnfinishedLink = false }:
           setFullBookList([...tempArr]);
           storeBooks([...tempArr]);
           setIsSortModalVisible(false);
-          // Pre-existing quirk: clears the native input without resetting
-          // `searchTxt`, which is what actually drives its value.
-          textInputRef.current?.clear();
+          setSearchTxt('');
         });
         break;
       case 'dateAsc':
@@ -87,7 +83,7 @@ export default function BookListLayout({ children, showUnfinishedLink = false }:
           setFullBookList([...tempArr]);
           storeBooks([...tempArr]);
           setIsSortModalVisible(false);
-          textInputRef.current?.clear();
+          setSearchTxt('');
         });
         break;
       case 'dateDesc':
@@ -96,7 +92,7 @@ export default function BookListLayout({ children, showUnfinishedLink = false }:
           setFullBookList([...tempArr]);
           storeBooks([...tempArr]);
           setIsSortModalVisible(false);
-          textInputRef.current?.clear();
+          setSearchTxt('');
         });
         break;
     }
@@ -124,15 +120,13 @@ export default function BookListLayout({ children, showUnfinishedLink = false }:
   return (
     <>
       <StatusBar style="light" />
-      <View style={[styles.header, { backgroundColor: accentColor }]}>
+      <View style={[styles.header, { backgroundColor: accentColor, height: 90 + insets.top, paddingTop: insets.top }]}>
         <View style={styles.headerInner}>
           <Text style={styles.headerText}>BOOKACCIO</Text>
           <View style={styles.rightContainer}>
             <Pressable
               onPress={() => {
                 setIsSearchContainerVisible(true);
-                // commenting this out because in phone, sometimes the keyboard doesn't show up
-                // textInputRef.current?.focus();
               }}
               style={styles.headerIconContainer}
             >
@@ -156,7 +150,7 @@ export default function BookListLayout({ children, showUnfinishedLink = false }:
         </View>
       </View>
 
-      <View style={[styles.secondaryHeaderContainer, { display: isSearchContainer ? 'flex' : 'none', backgroundColor: accentColor }]}>
+      <View style={[styles.secondaryHeaderContainer, { display: isSearchContainer ? 'flex' : 'none', backgroundColor: accentColor, height: 90 + insets.top, paddingTop: insets.top }]}>
         <View style={styles.searchContainerInner}>
           <View style={{ justifyContent: 'center' }}>
             <Entypo
@@ -167,7 +161,6 @@ export default function BookListLayout({ children, showUnfinishedLink = false }:
           </View>
           <View style={{ flex: 1, overflow: 'hidden' }}>
             <TextInput
-              ref={textInputRef}
               value={searchTxt}
               style={[styles.searchInput, { fontFamily: `${font}B` }]}
               onChangeText={(value) => {
@@ -211,7 +204,7 @@ export default function BookListLayout({ children, showUnfinishedLink = false }:
         isVisible={modalVisible}
         onBackdropPress={() => setModalVisible(false)}
       >
-        <View style={[styles.modalView, { backgroundColor: isDarkMode ? accentColor : Colors.light }]}>
+        <View style={[styles.modalView, { backgroundColor: isDarkMode ? accentColor : Colors.light, height: 200 + insets.bottom, paddingBottom: 15 + insets.bottom }]}>
           <Pressable
             style={[styles.closeBtn]}
             onPress={() => setModalVisible(false)}

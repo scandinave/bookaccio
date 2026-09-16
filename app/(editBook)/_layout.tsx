@@ -5,14 +5,17 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useAccentColorContext } from '@/providers/accentColorProvider';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PagesLayout = () => {
+  const insets = useSafeAreaInsets();
+
   const [accentColor, setAccentColor] = useAccentColorContext();
 
   const { t } = useTranslation();
   return (
     <>
-      <View style={[styles.header, { backgroundColor: accentColor, borderColor: accentColor }]}>
+      <View style={[styles.header, { backgroundColor: accentColor, borderColor: accentColor, height: 90 + insets.top, paddingTop: insets.top }]}>
         <View style={styles.headerInner}>
           <View style={{ flex: 1 }}>
             <Pressable onPress={() => router.back()}>
