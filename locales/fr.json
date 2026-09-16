@@ -49,8 +49,6 @@
   "notes": "Notes",
   "update": "Mettre à jour",
 
-  "enter-progress": "Saisir la progression",
-  "current-page": "Page actuelle",
   "save": "Sauvegarder",
 
   "start-date": "Date de début",
@@ -63,7 +61,6 @@
 
   "colors": "Couleurs",
   "book-database": "Book Database",
-  "source": "Source",
   "accent-color": "Couleur d’accentuation",
   "theme": "Thème",
   "use-amoled-black": "Utiliser le noir Amoled",
@@ -89,13 +86,9 @@
   "addresses": "Adresses",
   "address-copied": "L’adresse a été copiée !",
 
-  "explore-works": "Découvrir mon travail",
-  "explore-donate": "Découvrir les options de don",
-  "visit-website": "Visiter le site Bookaccio",
 
   "title-mandatory": "Titre, auteurice et pages sont des champs obligatoires",
   "error": "Erreur",
-  "invalid-number": "Numéro invalide",
   "invalid-num-msg": "Vous avez saisi un numéro invalide",
   "warning-current-page": "Le numéro de page actuel ne peut pas dépasser le nombre total de pages",
   "fisnish-reading-msg": "Vous avez fini de lire le livre",
@@ -104,7 +97,6 @@
   "date-error-how": "Hm, comment pouvez-vous finir un livre avant de l’avoir commencé ?",
   "success": "Bravo !",
   "move-to-done-msg": "Le livre a été déplacé dans 'Lu'",
-  "no-book-use-search": "Livre non trouvé. Utilisez la fonctionnalité de recherche ou ajoutez le livre manuellement",
   "warning": "Attention !",
   "warning-clear-books": "Ceci va supprimer tous les livres existants et ajouter une nouvelle liste",
   "success-import-file": "Fichier importé avec succès",

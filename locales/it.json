@@ -49,8 +49,6 @@
   "notes": "Note",
   "update": "Aggiorna",
 
-  "enter-progress": "Inserire l'avanzamento",
-  "current-page": "Pagina corrente",
   "save": "Salva",
 
   "start-date": "Data inizio",
@@ -63,7 +61,6 @@
 
   "colors": "Colori",
   "book-database": "Book Database",
-  "source": "Source",
   "accent-color": "Colore dettagli",
   "theme": "Tema",
   "use-amoled-black": "Usa il nero Amoled",
@@ -89,13 +86,9 @@
   "addresses": "Indirizzo",
   "address-copied": "L'indirizzo è stato copiato!",
 
-  "explore-works": "Guarda i miei lavori",
-  "explore-donate": "Guarda le opzioni per donare",
-  "visit-website": "Visita il sito di Bookaccio",
 
   "title-mandatory": "Titolo, autore e pagine sono campi obbligatori",
   "error": "Errore",
-  "invalid-number": "Numero non valido",
   "invalid-num-msg": "Hai inserito un numero non valido",
   "warning-current-page": "La pagina corrente non deve superare il totale delle pagine",
   "fisnish-reading-msg": "Hai finito di leggere il libro",
@@ -104,7 +97,6 @@
   "date-error-how": "Ebbene, come si può concludere un libro prima ancora di iniziarlo?",
   "success": "Successo!",
   "move-to-done-msg": "Il libro è stato spostato in 'Letti'.",
-  "no-book-use-search": "Libro non trovato. Utilizzare la funzione di ricerca o aggiungere il libro manualmente.",
   "warning": "Attenzione!",
   "warning-clear-books": "Questo rimuoverà tutti i libri esistenti dalla libreria e creerà un nuovo elenco.",
   "success-import-file": "File importato con successo",
