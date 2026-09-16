@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { BookApiResult, REQUEST_TIMEOUT_MS, buildVolumesUrl, classifyAxiosError, failure, logApiError, sanitizeApiKey, success } from './googleBooksApi';
+import { BookApiResult, REQUEST_TIMEOUT_MS, failure, logApiError, success } from './bookApi';
+import { buildVolumesUrl, classifyGoogleError, sanitizeApiKey } from './googleBooksApi';
 
 /**
  * Searches Google Books by title.
@@ -22,6 +23,6 @@ export const getBookDetails = async (bookTitle: string, apiKey: unknown): Promis
     return success(Array.isArray(items) ? items : []);
   } catch (err) {
     logApiError('title search', err);
-    return failure(classifyAxiosError(err));
+    return failure(classifyGoogleError(err));
   }
 };

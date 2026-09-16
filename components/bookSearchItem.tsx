@@ -3,24 +3,24 @@ import React from 'react';
 import { useFontsContext } from '@/providers/fontProvider';
 import BookCover from '@/components/bookCover';
 
-const BookSearchItem = ({ book, onPress }: { book: BookSearchResultProp; onPress: any }) => {
+const BookSearchItem = ({ book, onPress }: { book: BookSearchResult; onPress: any }) => {
     const [font, setFont] = useFontsContext();
 
     return (
         <>
             <TouchableOpacity
-                key={book.selfLink}
+                key={book.ref}
                 onPress={onPress}
             >
                 <View style={styles.modalBookItem}>
                     <BookCover
                         style={styles.modalImage}
-                        uri={book?.volumeInfo?.imageLinks?.thumbnail}
+                        uri={book.thumbnail}
                     />
                     <View style={{ width: '70%' }}>
-                        <Text style={[styles.modalBookTitle, { fontFamily: `${font}B` }]}>{book?.volumeInfo?.title}</Text>
-                        <Text style={[styles.modalBookDetails, { fontFamily: `${font}R` }]}>{book?.volumeInfo?.subtitle}</Text>
-                        <Text style={[styles.modalBookDetails, { fontFamily: `${font}R` }]}>{book?.volumeInfo?.authors !== undefined ? book?.volumeInfo?.authors[0] : ''}</Text>
+                        <Text style={[styles.modalBookTitle, { fontFamily: `${font}B` }]}>{book.title}</Text>
+                        <Text style={[styles.modalBookDetails, { fontFamily: `${font}R` }]}>{book.subtitle}</Text>
+                        <Text style={[styles.modalBookDetails, { fontFamily: `${font}R` }]}>{book.authors?.[0] ?? ''}</Text>
                     </View>
                 </View>
             </TouchableOpacity>

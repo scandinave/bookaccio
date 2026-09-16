@@ -19,7 +19,6 @@ import { getBookList } from '@/helpers/getBookList';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState, BookStateStringProps } from '@/constants/bookState';
 import { useTranslation } from 'react-i18next';
-import { useSelectedBookOLContext } from '@/providers/selectedBookOLProvider';
 
 const AddNewBook = () => {
   const { addBook }: { addBook: BookStateStringProps } = useLocalSearchParams();
@@ -35,8 +34,6 @@ const AddNewBook = () => {
   const [accentColor, setAccentColor] = useAccentColorContext();
 
   const [selectedBook, setSelectedBook] = useSelectedBookContext();
-
-  // const [selectedBookOL, setSelectedBookOL] = useSelectedBookOLContext();
 
   const [fullBookList, setFullBookList] = useFullBookListContext();
 
@@ -69,23 +66,21 @@ const AddNewBook = () => {
 
   const [bookDetails, setBookDetails] = useState<Book>({
     id: createUID(),
-    title: selectedBook.volumeInfo?.title ? selectedBook.volumeInfo.title : '',
-    subtitle: selectedBook.volumeInfo?.subtitle ? selectedBook.volumeInfo?.subtitle : '',
-    authors: selectedBook.volumeInfo?.authors ? selectedBook.volumeInfo?.authors : [''],
-    categories: selectedBook.volumeInfo?.categories ? selectedBook.volumeInfo?.categories : [''],
-    pageCount: selectedBook.volumeInfo?.pageCount ? selectedBook.volumeInfo?.pageCount : 0,
-    description: selectedBook.volumeInfo?.description ? selectedBook.volumeInfo?.description : '',
-    imageLinks: {
-      thumbnail: selectedBook.volumeInfo?.imageLinks ? selectedBook.volumeInfo?.imageLinks.thumbnail : '',
-    },
+    title: selectedBook?.title ?? '',
+    subtitle: selectedBook?.subtitle ?? '',
+    authors: selectedBook?.authors?.length ? selectedBook.authors : [''],
+    categories: selectedBook?.categories?.length ? selectedBook.categories : [''],
+    pageCount: selectedBook?.pageCount ?? 0,
+    description: selectedBook?.description ?? '',
+    imageLinks: { thumbnail: selectedBook?.thumbnail ?? '' },
     currentPage: 0,
     state: addBook,
-    startDate: Date.parse(new Date().toString()),
-    endDate: Date.parse(new Date().toString()),
-    publishedDate: selectedBook.volumeInfo?.publishedDate ? selectedBook.volumeInfo?.publishedDate.slice(0, 4) : '',
-    language: selectedBook.volumeInfo?.language,
-    publisher: selectedBook.volumeInfo?.publisher,
-    isbn: selectedBook.volumeInfo?.industryIdentifiers && selectedBook.volumeInfo?.industryIdentifiers[1]?.identifier ? selectedBook.volumeInfo?.industryIdentifiers[1]?.identifier : '',
+    startDate: Date.now(),
+    endDate: Date.now(),
+    publishedDate: selectedBook?.publishedDate ?? '',
+    language: selectedBook?.language,
+    publisher: selectedBook?.publisher,
+    isbn: selectedBook?.isbn ?? '',
     translator: '',
     originalTitle: '',
     notes: '',

@@ -1,5 +1,5 @@
 import { Alert } from 'react-native';
-import { BookApiErrorKind } from './googleBooksApi';
+import { BookApiErrorKind } from './bookApi';
 
 type Translate = (key: string) => string;
 

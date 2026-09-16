@@ -9,18 +9,12 @@ import { Entypo, Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/ve
 import { useAccentColorContext } from '@/providers/accentColorProvider';
 import { useFontsContext } from '@/providers/fontProvider';
 import BookSearchItem from '@/components/bookSearchItem';
-import { getBookDetails } from '@/helpers/getBookDetails';
 import { router } from 'expo-router';
-import { useSelectedBookContext } from '@/providers/selectedBookProvider';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
-import { getBookByIsbn } from '@/helpers/getBookByIsbn';
-import { getVolumeById } from '@/helpers/getVolumeById';
-import { alertBookApiFailure, alertNoResult } from '@/helpers/bookSearchAlert';
-import BarcodeZxingScan from 'rn-barcode-zxing-scan';
 import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState } from '@/constants/bookState';
+import { useBookSearch } from '@/hooks/useBookSearch';
 import { useTranslation } from 'react-i18next';
-import { useApiKeyContext } from '@/providers/apiKeyProvider';
 
 const Read = () => {
   const [isDarkMode, setIsDarkMode] = useDarkModeContext();
@@ -28,134 +22,36 @@ const Read = () => {
   const [accentColor, setAccentColor] = useAccentColorContext();
 
   const [font, setFont] = useFontsContext();
-
-  const [selectedBook, setSelectedBook] = useSelectedBookContext();
-
   const [isBlackTheme, setIsBlackTheme] = useBlackThemeContext();
 
   const [hidePlusBtn, setHidePlusBtn] = useState(false);
 
-  const [firstModal, setFirstModal] = useState(false);
-
-  const [searchModal, setSearchModal] = useState(false);
-
-  const [isbnModal, setIsbnModal] = useState(false);
-
-  const [title, setTitle] = useState('');
-
-  const [isbn, setIsbn] = useState('');
-
-  const [isSearchActive, setIsSearchActive] = useState(false);
-
-  const [bookSearchResults, setBookSearchResults] = useState<BookSearchResultProp[]>([]);
-
-  const [fullBookList, setFullBookList] = useFullBookListContext();
-
-  const [apiKey] = useApiKeyContext();
-
-  const [loadingAnimation, setLoadingAnimation] = useState(false);
+  const [fullBookList] = useFullBookListContext();
 
   const { t } = useTranslation();
 
-  function handleAddBook() {
-    setFirstModal(true);
-  }
-
-  async function handleBookSearch(title: string) {
-    Keyboard.dismiss();
-    if (title.trim() === '') return;
-    setLoadingAnimation(true);
-    try {
-      const result = await getBookDetails(title, apiKey);
-      if (!result.ok) {
-        alertBookApiFailure(result.kind, t);
-        return;
-      }
-      setBookSearchResults(result.data);
-      setIsSearchActive(result.data.length > 0);
-      if (result.data.length === 0) alertNoResult(t, 'title');
-    } finally {
-      setLoadingAnimation(false);
-    }
-  }
-
-  async function handleBookSearchByIsbn(isbn: string) {
-    Keyboard.dismiss();
-    if (isbn.trim() === '') return;
-    setLoadingAnimation(true);
-    try {
-      const result = await getBookByIsbn(isbn, apiKey);
-      if (!result.ok) {
-        alertBookApiFailure(result.kind, t);
-        return;
-      }
-      if (!result.data) {
-        alertNoResult(t, 'isbn');
-        return;
-      }
-      setSelectedBook(result.data);
-      setIsbnModal(false);
-      router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: BookState.READ } });
-    } finally {
-      setLoadingAnimation(false);
-    }
-  }
-
-  async function handleBookSelection(id: string, state: string) {
-    setLoadingAnimation(true);
-    try {
-      const result = await getVolumeById(id, apiKey);
-      if (!result.ok) {
-        // Stay on the results list: navigating here would open the form filled
-        // with whatever book was selected previously.
-        alertBookApiFailure(result.kind, t);
-        return;
-      }
-      setSelectedBook(result.data);
-      Keyboard.dismiss();
-      setSearchModal(false);
-      router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: state } });
-    } finally {
-      setLoadingAnimation(false);
-    }
-  }
-
-  function addBookManually(state: string) {
-    setSelectedBook({});
-    Keyboard.dismiss();
-    setFirstModal(false);
-    router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: state } });
-  }
-
-  const barcodeScanned = async (barcode: string) => {
-    try {
-      const result = await getBookByIsbn(barcode, apiKey);
-      if (!result.ok) {
-        alertBookApiFailure(result.kind, t);
-        return;
-      }
-      if (!result.data) {
-        alertNoResult(t, 'isbn');
-        return;
-      }
-      setSelectedBook(result.data);
-      router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: BookState.READ } });
-    } finally {
-      setLoadingAnimation(false);
-    }
-  };
-
-  function handleBarcodeSearch() {
-    BarcodeZxingScan.showQrReader(async (error: any, data: any) => {
-      if (error) {
-        console.log('Error:', error);
-        return;
-      } else {
-        setLoadingAnimation(true);
-        barcodeScanned(data);
-      }
-    });
-  }
+  // One implementation for all four list screens: a change here cannot miss one.
+  const {
+    firstModal,
+    setFirstModal,
+    searchModal,
+    setSearchModal,
+    isbnModal,
+    setIsbnModal,
+    title,
+    setTitle,
+    isbn,
+    setIsbn,
+    isSearchActive,
+    results: bookSearchResults,
+    loading: loadingAnimation,
+    openAddModal: handleAddBook,
+    searchByTitle: handleBookSearch,
+    searchByIsbn: handleBookSearchByIsbn,
+    selectResult,
+    addManually,
+    scanBarcode: handleBarcodeSearch,
+  } = useBookSearch(BookState.READ);
 
   return (
     <View style={[styles.container, { backgroundColor: isBlackTheme ? Colors.fullBlack : isDarkMode ? Colors.black : Colors.white }]}>
@@ -197,7 +93,7 @@ const Read = () => {
           <Text style={[styles.modalHeader, { fontFamily: `${font}B` }]}>{t('add-book')}</Text>
           <View style={styles.modalButtonContainer}>
             <Pressable
-              onPress={() => addBookManually(BookState.READ)}
+              onPress={() => addManually()}
               style={styles.modalButton}
             >
               <AntDesign
@@ -282,10 +178,10 @@ const Read = () => {
               contentContainerStyle={{ width: '90%' }}
             >
               {bookSearchResults?.map((book) => (
-                <View key={book.id}>
+                <View key={book.ref}>
                   <BookSearchItem
                     book={book}
-                    onPress={() => handleBookSelection(book.id, BookState.READ)}
+                    onPress={() => selectResult(book)}
                   />
                 </View>
               ))}

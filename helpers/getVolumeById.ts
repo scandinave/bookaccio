@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { BookApiResult, REQUEST_TIMEOUT_MS, buildVolumeByIdUrl, classifyAxiosError, failure, logApiError, sanitizeApiKey, success } from './googleBooksApi';
+import { BookApiResult, REQUEST_TIMEOUT_MS, failure, logApiError, success } from './bookApi';
+import { buildVolumeByIdUrl, classifyGoogleError, sanitizeApiKey } from './googleBooksApi';
 
 /**
  * Fetches the full volume for a search result.
@@ -13,6 +14,6 @@ export async function getVolumeById(volumeId: string, apiKey: unknown): Promise<
     return success(res.data);
   } catch (err) {
     logApiError('volume fetch', err);
-    return failure(classifyAxiosError(err));
+    return failure(classifyGoogleError(err));
   }
 }

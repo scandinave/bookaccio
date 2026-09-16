@@ -1,4 +1,4 @@
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View, Switch, TextInput, Button, Pressable } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View, Switch, Pressable } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDarkModeContext } from '@/providers/themeProvider';
@@ -14,7 +14,7 @@ import { getBookList } from '@/helpers/getBookList';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { storeBooks } from '@/helpers/storeBooks';
 import * as WebBrowser from 'expo-web-browser';
-import { getData, setData, deleteData } from '@/helpers/storage';
+import { setData } from '@/helpers/storage';
 import { useRatingShownContext } from '@/providers/options/showRatingProvider';
 import { usePageNumberShownContext } from '@/providers/options/showPageNumberProvider';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
@@ -24,12 +24,9 @@ import { useUnfinishedContext } from '@/providers/options/showUnfinishedProvider
 import { useShowAdditionalDetailsContext } from '@/providers/options/showAdditionalDetails';
 import { languages } from '@/constants/languages';
 import { useTranslation } from 'react-i18next';
-import { booksDataBase } from '@/constants/booksDataBase';
+import BookSourceSettings from '@/components/bookSourceSettings';
 import { Link } from 'expo-router';
-import { useApiKeyContext } from '@/providers/apiKeyProvider';
 import Modal from 'react-native-modal';
-import { checkApiKey } from '@/helpers/checkApiKey';
-import { alertBookApiFailure } from '@/helpers/bookSearchAlert';
 import { Feather } from '@expo/vector-icons';
 import ApiKeyInstructions from '@/components/apiKeyInstructions';
 
@@ -52,20 +49,13 @@ const Settings = () => {
 
   const [additionalDetailsShown, setAdditionalDetailsShown] = useShowAdditionalDetailsContext();
 
-  const [apiKey, setApiKey] = useApiKeyContext();
 
-  const [hideApiKey, setHideApiKey] = useState(true);
 
-  const [showApiModal, setShowApiModal] = useState(false);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
 
   const { t } = useTranslation();
 
-  const getWorkingKey = async () => {
-    const workingKey = await getData('apiKey');
-    return typeof workingKey === 'string' ? workingKey : '';
-  };
 
   function handleLink(url: string) {
     WebBrowser.openBrowserAsync(url);
@@ -151,35 +141,8 @@ const Settings = () => {
     }
   };
 
-  function handleAPIKey() {
-    checkApiKey(apiKey).then((result) => {
-      if (!result.ok) {
-        alertBookApiFailure(result.kind, t);
-        return;
-      }
-      setData('apiKey', apiKey);
-      setShowApiModal(false);
-      Alert.alert(t('success'), t('api-key-updated'));
-    });
-  }
 
-  function deleteApiKey() {
-    Alert.alert(t('confirm-delete-api-key'), t('confirm-delete-api-key-msg'), [
-      { text: t('cancel'), style: 'cancel' },
-      {
-        text: t('delete'),
-        style: 'default',
-        onPress: () => {
-          setApiKey('');
-          deleteData('apiKey');
-        },
-      },
-    ]);
-  }
 
-  function handleInfoModal() {
-    setShowInfoModal(true);
-  }
 
   return (
     <ScrollView
@@ -218,49 +181,7 @@ const Settings = () => {
               </View>
             )}
           </View>
-          <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? 'rgba(15,15,15,0.3)' : 'rgba(200,200,200,0.3)' }]}>
-            <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end' }]}>
-              <Text style={[styles.subheading, { color: isDarkMode ? Colors.light : Colors.dark }]}>{t('api-key-section')}</Text>
-              <Pressable
-                style={[{ paddingLeft: 10 }]}
-                onPress={() => setShowInfoModal(true)}
-              >
-                <View style={[]}>
-                  <Feather
-                    name="info"
-                    color={accentColor}
-                    size={20}
-                  />
-                </View>
-              </Pressable>
-            </View>
-            <View style={[{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }]}>
-              <Text style={[styles.text, { color: isDarkMode ? Colors.light : Colors.dark }]}>{t('my-api-key')}</Text>
-              <View style={[styles.apiBox, { borderColor: isDarkMode ? Colors.light : Colors.dark }]}>
-                <Text style={[styles.text, { color: isDarkMode ? Colors.light : Colors.dark }]}>{hideApiKey ? '*********************' : apiKey !== '' ? apiKey : t('no-api-key')}</Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setHideApiKey(!hideApiKey)}
-                style={[styles.btn, { backgroundColor: accentColor }]}
-              >
-                <Text style={[styles.text]}>{hideApiKey ? t('show') : t('hide')}</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.btn, { backgroundColor: accentColor, alignItems: 'center' }]}
-              onPress={() => setShowApiModal(true)}
-            >
-              <Text style={[styles.text]}>{t('update-api-key')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={deleteApiKey}
-              style={[styles.btn, { backgroundColor: accentColor, alignItems: 'center' }]}
-            >
-              <Text style={[styles.text]}>{t('delete-api-key')}</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? 'rgba(15,15,15,0.3)' : 'rgba(200,200,200,0.3)' }]}>
+            <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? 'rgba(15,15,15,0.3)' : 'rgba(200,200,200,0.3)' }]}>
             <Text style={[styles.subheading, { color: isDarkMode ? Colors.light : Colors.dark }]}>{t('fonts')}</Text>
             <SettingItem
               label={t('font')}
@@ -274,13 +195,21 @@ const Settings = () => {
               data={languages}
             />
           </View>
-          {/* <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? 'rgba(15,15,15,0.3)' : 'rgba(200,200,200,0.3)' }]}>
+          <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? 'rgba(15,15,15,0.3)' : 'rgba(200,200,200,0.3)' }]}>
             <Text style={[styles.subheading, { color: isDarkMode ? Colors.light : Colors.dark }]}>{t('book-database')}</Text>
-            <SettingItem
-              label={t('source')}
-              data={booksDataBase}
-            />
-          </View> */}
+            <BookSourceSettings />
+            <Pressable
+              style={styles.helpLink}
+              onPress={() => setShowInfoModal(true)}
+            >
+              <Feather
+                name="info"
+                color={accentColor}
+                size={18}
+              />
+              <Text style={[styles.helpLinkText, { color: accentColor }]}>{t('api-key-help')}</Text>
+            </Pressable>
+          </View>
           <View style={[styles.sectionContainer, { backgroundColor: isDarkMode ? 'rgba(15,15,15,0.3)' : 'rgba(200,200,200,0.3)' }]}>
             <Text style={[styles.subheading, { color: isDarkMode ? Colors.light : Colors.dark }]}>{t('options')}</Text>
             <View style={{ gap: 15 }}>
@@ -391,39 +320,6 @@ const Settings = () => {
           </View>
         </View>
         <Modal
-          isVisible={showApiModal}
-          onBackdropPress={() => {
-            getWorkingKey().then((value) => {
-              setApiKey(value);
-            });
-            setShowApiModal(false);
-          }}
-          onBackButtonPress={() => {
-            getWorkingKey().then((value) => {
-              setApiKey(value);
-            });
-            setShowApiModal(false);
-          }}
-        >
-          <View style={[styles.modalContainer]}>
-            <TextInput
-              placeholder={t('enter-api-key')}
-              placeholderTextColor={Colors.dark}
-              style={[styles.text, { color: Colors.dark }]}
-              value={apiKey}
-              onChangeText={(value) => setApiKey(value)}
-              submitBehavior="blurAndSubmit"
-              onSubmitEditing={() => handleAPIKey()}
-            />
-            <TouchableOpacity
-              onPressIn={handleAPIKey}
-              style={[styles.btn, { backgroundColor: accentColor }]}
-            >
-              <Text style={[styles.text]}>{t('update').toUpperCase()}</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
-        <Modal
           isVisible={showInfoModal}
           onBackdropPress={() => setShowInfoModal(false)}
         >
@@ -510,6 +406,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 10,
+  },
+
+  helpLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+
+  helpLinkText: {
+    fontFamily: 'MontR',
+    textDecorationLine: 'underline',
   },
 
   apiBox: {

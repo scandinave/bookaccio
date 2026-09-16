@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { BookApiResult, REQUEST_TIMEOUT_MS, buildVolumesUrl, classifyAxiosError, failure, isValidIsbn, logApiError, normalizeIsbn, sanitizeApiKey, success } from './googleBooksApi';
+import { BookApiResult, REQUEST_TIMEOUT_MS, failure, isValidIsbn, logApiError, normalizeIsbn, success } from './bookApi';
+import { buildVolumesUrl, classifyGoogleError, sanitizeApiKey } from './googleBooksApi';
 
 /**
  * Looks a book up by ISBN, accepting hyphenated input and raw barcode payloads.
@@ -20,6 +21,6 @@ export async function getBookByIsbn(value: string, apiKey: unknown): Promise<Boo
     return success(Array.isArray(items) && items.length > 0 ? items[0] : undefined);
   } catch (err) {
     logApiError('isbn search', err);
-    return failure(classifyAxiosError(err));
+    return failure(classifyGoogleError(err));
   }
 }

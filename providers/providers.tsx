@@ -1,7 +1,6 @@
 import FontsProvider from '@/providers/fontProvider';
 import AccentColorProvider from '@/providers/accentColorProvider';
 import SelectedBookProvider from '@/providers/selectedBookProvider';
-import SelectedBookOLProvider from './selectedBookOLProvider';
 import ThemeProvider from '@/providers/themeProvider';
 import FullBooksListProvider from './booksFullListProvider';
 import ShowPageNumberProvider from './options/showPageNumberProvider';
@@ -11,7 +10,7 @@ import PreventScreenShotProvider from './options/preventScreenShotProvider';
 import UnfinishedProvider from './options/showUnfinishedProvider';
 import ShowAdditionalDetailsProvider from './options/showAdditionalDetails';
 import LanguageProvider from './languageProvider';
-import BookSourceProvider from './bookSourceProvider';
+import BookSourcesProvider from './bookSourcesProvider';
 import ApiKeyProvider from './apiKeyProvider';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
@@ -27,13 +26,11 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
                     <UnfinishedProvider>
                       <ShowAdditionalDetailsProvider>
                         <LanguageProvider>
-                          <SelectedBookOLProvider>
-                            <BookSourceProvider>
-                              <ApiKeyProvider>
-                                <ThemeProvider>{children}</ThemeProvider>
-                              </ApiKeyProvider>
-                            </BookSourceProvider>
-                          </SelectedBookOLProvider>
+                          <BookSourcesProvider>
+                            <ApiKeyProvider>
+                              <ThemeProvider>{children}</ThemeProvider>
+                            </ApiKeyProvider>
+                          </BookSourcesProvider>
                         </LanguageProvider>
                       </ShowAdditionalDetailsProvider>
                     </UnfinishedProvider>

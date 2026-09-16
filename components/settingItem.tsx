@@ -11,8 +11,6 @@ import { useLanguageContext } from '@/providers/languageProvider';
 import i18n from '@/services/i18next';
 import { languageList } from '../constants/languageList';
 import { useTranslation } from 'react-i18next';
-import { useBookSourceContext } from '@/providers/bookSourceProvider';
-import { booksDataBase } from '@/constants/booksDataBase';
 import { fonts } from '@/constants/fonts';
 
 const SettingItem = ({ label, data }: SettingItemProps) => {
@@ -25,9 +23,6 @@ const SettingItem = ({ label, data }: SettingItemProps) => {
   const [isBlackTheme, setIsBlackTheme] = useBlackThemeContext();
 
   const [language, setLanguage] = useLanguageContext();
-
-  // const [bookSource, setBookSource] = useBookSourceContext();
-
   const { t } = useTranslation();
 
   const selectedText = () => {
@@ -40,8 +35,6 @@ const SettingItem = ({ label, data }: SettingItemProps) => {
         return data.filter((item) => item.value === accentColor)[0].title;
       case t('language'):
         return languageList[language].nativeName;
-      // case t('source'):
-      //   return booksDataBase.find((item) => item.value === bookSource)?.title;
     }
   };
 
@@ -68,10 +61,6 @@ const SettingItem = ({ label, data }: SettingItemProps) => {
         setData('language', value);
         i18n.changeLanguage(value);
         break;
-      // case t('source'):
-      //   setBookSource(value);
-      //   setData('bookSource', value);
-      //   break;
     }
   };
 

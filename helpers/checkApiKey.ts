@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { BookApiResult, REQUEST_TIMEOUT_MS, buildVolumesUrl, classifyAxiosError, failure, logApiError, sanitizeApiKey, success } from './googleBooksApi';
+import { BookApiResult, REQUEST_TIMEOUT_MS, failure, logApiError, success } from './bookApi';
+import { buildVolumesUrl, classifyGoogleError, sanitizeApiKey } from './googleBooksApi';
 
 /**
  * Probes a candidate API key with a cheap request.
@@ -19,6 +20,6 @@ export async function checkApiKey(key: unknown): Promise<BookApiResult<true>> {
   } catch (err) {
     // Never log the error itself: its `config.url` carries the API key.
     logApiError('api key check', err);
-    return failure(classifyAxiosError(err));
+    return failure(classifyGoogleError(err));
   }
 }
