@@ -20,11 +20,12 @@ import { useBlackThemeContext } from '@/providers/blackThemeProvider';
 import { BookState, BookStateStringProps } from '@/constants/bookState';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { parseSeriesFromTitle } from '@/helpers/series';
 
 const AddNewBook = () => {
   const insets = useSafeAreaInsets();
 
-  const { addBook }: { addBook: BookStateStringProps } = useLocalSearchParams();
+  const { addBook, series: seriesParam }: { addBook: BookStateStringProps; series?: string } = useLocalSearchParams();
 
   if (Array.isArray(addBook)) {
     throw new Error("Custom addBook mustn't be an Array Error");
@@ -67,6 +68,18 @@ const AddNewBook = () => {
     return uid;
   }
 
+  /**
+   * Where the Series field starts, and whether the title may keep changing it.
+   *
+   * A value coming from the route (added from inside a series) or from the
+   * provider is pinned: a book added to "Dune" must stay in "Dune" even if its
+   * title is edited afterwards. A value merely guessed from the title is not
+   * pinned, so it keeps mirroring what is typed.
+   */
+  const pinnedSeries = seriesParam ?? selectedBook?.series?.trim();
+  const titleSeries = parseSeriesFromTitle(selectedBook?.title, selectedBook?.subtitle);
+  const isSeriesPinned = useRef(!!pinnedSeries);
+
   const [bookDetails, setBookDetails] = useState<Book>({
     id: createUID(),
     title: selectedBook?.title ?? '',
@@ -88,6 +101,8 @@ const AddNewBook = () => {
     originalTitle: '',
     notes: '',
     review: '',
+    series: pinnedSeries ?? titleSeries?.name ?? '',
+    seriesIndex: selectedBook?.seriesIndex ?? titleSeries?.index,
   });
 
   const statusData: { title: string; value: BookStateStringProps }[] = [
@@ -178,7 +193,15 @@ const AddNewBook = () => {
           <CustomInput
             label={t('title')}
             value={bookDetails.title !== undefined ? bookDetails.title : ''}
-            onChangeText={(value) => setBookDetails({ ...bookDetails, title: value })}
+            onChangeText={(value) =>
+              setBookDetails((previous) => {
+                if (isSeriesPinned.current) return { ...previous, title: value };
+                // Mirror the title exactly, clearing included, so the field is
+                // predictable instead of keeping a series the title no longer says.
+                const hint = parseSeriesFromTitle(value);
+                return { ...previous, title: value, series: hint?.name ?? '', seriesIndex: hint?.index };
+              })
+            }
           />
         </View>
         <View>
@@ -232,6 +255,28 @@ const AddNewBook = () => {
             label={t('subtitle')}
             value={bookDetails.subtitle ? bookDetails.subtitle : ''}
             onChangeText={(value) => setBookDetails({ ...bookDetails, subtitle: value })}
+          />
+        </View>
+        <View>
+          <CustomInput
+            label={t('series')}
+            value={bookDetails.series ?? ''}
+            onChangeText={(value) => {
+              // Editing it — clearing it included — stops the title from filling it.
+              isSeriesPinned.current = true;
+              setBookDetails({ ...bookDetails, series: value });
+            }}
+          />
+        </View>
+        <View>
+          <CustomInput
+            label={t('series-volume')}
+            value={bookDetails.seriesIndex !== undefined ? String(bookDetails.seriesIndex) : ''}
+            onChangeText={(value) => {
+              const parsed = parseInt(value.trim(), 10);
+              setBookDetails({ ...bookDetails, seriesIndex: Number.isFinite(parsed) ? parsed : undefined });
+            }}
+            inputMode="numeric"
           />
         </View>
         <View>

@@ -5,8 +5,15 @@ import { BookSource } from './types';
 const SEARCH_ENDPOINT = 'https://openlibrary.org/search.json';
 const COVER_ENDPOINT = 'https://covers.openlibrary.org/b/id';
 
-/** Without `fields` the search endpoint returns very large documents. */
-const SEARCH_FIELDS = 'key,title,subtitle,author_name,first_publish_year,number_of_pages_median,cover_i,isbn,language,publisher';
+/**
+ * Without `fields` the search endpoint returns very large documents.
+ *
+ * The series columns are `series_name` / `series_position`, not `series`:
+ * asking for `series` is accepted and then silently ignored, which would have
+ * made series detection never fire with no error anywhere.
+ */
+const SEARCH_FIELDS =
+  'key,title,subtitle,author_name,first_publish_year,number_of_pages_median,cover_i,isbn,language,publisher,series_name,series_position';
 
 const RESULT_LIMIT = 20;
 
@@ -21,12 +28,20 @@ type OpenLibraryDoc = {
   isbn?: string[];
   language?: string[];
   publisher?: string[];
+  series_name?: string[];
+  /** Positions arrive as strings, and "2.5" exists in the wild. */
+  series_position?: string[];
 };
 
 /** `isbn` mixes 10- and 13-digit entries; prefer a 13. */
 function pickIsbn(isbns?: string[]): string | undefined {
   if (!isbns?.length) return undefined;
   return isbns.find((value) => normalizeIsbn(value).length === 13) ?? isbns[0];
+}
+
+function pickSeriesIndex(positions?: string[]): number | undefined {
+  const parsed = parseFloat(positions?.[0] ?? '');
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function toSearchResult(doc: OpenLibraryDoc): BookSearchResult {
@@ -44,6 +59,9 @@ function toSearchResult(doc: OpenLibraryDoc): BookSearchResult {
     isbn: pickIsbn(doc.isbn),
     // Open Library reports MARC codes ("fre", "ger") where Google uses two letters.
     language: doc.language?.[0],
+    // The only place a real series *name* is available from either provider.
+    series: doc.series_name?.[0],
+    seriesIndex: pickSeriesIndex(doc.series_position),
   };
 }
 

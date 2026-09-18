@@ -5,6 +5,21 @@ import { getBookByIsbn } from '../getBookByIsbn';
 import { getVolumeById } from '../getVolumeById';
 import { BookSource } from './types';
 
+/**
+ * Google exposes a rank but never a series name, so only the rank is taken;
+ * the name is recovered from the title by `detectSeries`.
+ */
+function pickSeriesIndex(info: BookSearchResultProp['volumeInfo']): number | undefined {
+  const series = info?.seriesInfo;
+  if (!series) return undefined;
+
+  const display = parseFloat(series.bookDisplayNumber ?? '');
+  if (Number.isFinite(display)) return display;
+
+  const order = series.volumeSeries?.[0]?.orderNumber;
+  return typeof order === 'number' && Number.isFinite(order) ? order : undefined;
+}
+
 /** Google returns "Fiction / Fantasy" style categories and http: thumbnails. */
 function toSearchResult(volume: BookSearchResultProp): BookSearchResult {
   const info = volume?.volumeInfo;
@@ -25,6 +40,7 @@ function toSearchResult(volume: BookSearchResultProp): BookSearchResult {
     categories: info?.categories ? [...info.categories] : undefined,
     isbn: isbn13 ?? identifiers[0]?.identifier,
     language: info?.language,
+    seriesIndex: pickSeriesIndex(info),
   };
 }
 
@@ -46,6 +62,9 @@ export const googleBooksSource: BookSource = {
 
   async fetchDetails(book, apiKey): Promise<BookApiResult<BookSearchResult>> {
     const result = await getVolumeById(book.ref, apiKey);
-    return result.ok ? success(toSearchResult(result.data)) : result;
+    if (!result.ok) return result;
+    // Merge rather than replace: returning a fresh object dropped everything
+    // the search stage had already attached to the hit.
+    return success({ ...book, ...toSearchResult(result.data) });
   },
 };

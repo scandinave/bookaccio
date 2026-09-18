@@ -45,6 +45,15 @@ declare interface BookSearchResultProp {
     subtitle: string;
     industryIdentifiers: { type: string; identifier: string }[];
     pageCount: number;
+    /**
+     * Undocumented, and absent from most volumes. It carries a rank and an
+     * opaque series id — never the series name, which is why the name is
+     * always recovered from the title.
+     */
+    seriesInfo?: {
+      bookDisplayNumber?: string;
+      volumeSeries?: { seriesId?: string; orderNumber?: number }[];
+    };
   };
 }
 
@@ -76,6 +85,10 @@ declare interface BookSearchResult {
   categories?: string[];
   isbn?: string;
   language?: string;
+  /** Series name as the provider reports it. */
+  series?: string;
+  /** Rank within the series. */
+  seriesIndex?: number;
 }
 
 declare interface Book {
@@ -110,6 +123,13 @@ declare interface Book {
   review?: string;
   originalTitle?: string;
   translator?: string;
+  /**
+   * Series this volume belongs to. Absent or empty means a standalone book.
+   * Filled by detection when the book is created, and freely editable after.
+   */
+  series?: string;
+  /** Rank within the series; absent when it is not known. */
+  seriesIndex?: number;
 }
 
 declare interface BookOptional {

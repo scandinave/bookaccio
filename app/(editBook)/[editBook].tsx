@@ -24,6 +24,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 /** Builds the editable form state, tolerating a book that is not loaded yet. */
 function toBookDetails(book?: Book): Book {
   return {
+    /**
+     * Spread first, then normalise.
+     *
+     * This used to be a hand-written field list, so every field it forgot was
+     * erased the moment the form was saved — `rating`, `maturityRating`,
+     * `previewLink` and `printedPageCount` all went that way. Spreading means
+     * the next field added to `Book` cannot fall into the same trap.
+     */
+    ...(book ?? ({} as Book)),
     id: book?.id ?? 0,
     title: book?.title ?? '',
     subtitle: book?.subtitle ?? '',
@@ -36,6 +45,8 @@ function toBookDetails(book?: Book): Book {
     state: book?.state ?? BookState.READING,
     startDate: book?.startDate ?? Date.now(),
     endDate: book?.endDate ?? Date.now(),
+    // Kept: the field below is a numeric "published year", and every write path
+    // already stores a year. Not a truncation bug — a normalisation.
     publishedDate: book?.publishedDate?.slice(0, 4) ?? '',
     language: book?.language,
     publisher: book?.publisher,
@@ -44,6 +55,8 @@ function toBookDetails(book?: Book): Book {
     originalTitle: book?.originalTitle ?? '',
     translator: book?.translator ?? '',
     review: book?.review ?? '',
+    series: book?.series ?? '',
+    seriesIndex: book?.seriesIndex,
   };
 }
 
@@ -229,6 +242,24 @@ const AddNewBook = () => {
             label={t('subtitle')}
             value={bookDetails.subtitle ? bookDetails.subtitle : ''}
             onChangeText={(value) => setBookDetails({ ...bookDetails, subtitle: value })}
+          />
+        </View>
+        <View>
+          <CustomInput
+            label={t('series')}
+            value={bookDetails.series ?? ''}
+            onChangeText={(value) => setBookDetails({ ...bookDetails, series: value })}
+          />
+        </View>
+        <View>
+          <CustomInput
+            label={t('series-volume')}
+            value={bookDetails.seriesIndex !== undefined ? String(bookDetails.seriesIndex) : ''}
+            onChangeText={(value) => {
+              const parsed = parseInt(value.trim(), 10);
+              setBookDetails({ ...bookDetails, seriesIndex: Number.isFinite(parsed) ? parsed : undefined });
+            }}
+            inputMode="numeric"
           />
         </View>
         <View>

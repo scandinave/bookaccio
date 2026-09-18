@@ -11,10 +11,12 @@ import { useBookSourcesContext } from '@/providers/bookSourcesProvider';
 import { useSelectedBookContext } from '@/providers/selectedBookProvider';
 
 /**
- * Everything the four book-list screens need to search for a book.
+ * Everything a book-list screen needs to search for a book.
  *
+ * `seriesName` is set when the search starts from inside a series: the new
+ * volume then joins that series whatever its title turns out to say.
  */
-export function useBookSearch(targetState: BookStateStringProps) {
+export function useBookSearch(targetState: BookStateStringProps, seriesName?: string) {
   const [, setSelectedBook] = useSelectedBookContext();
   const [apiKey] = useApiKeyContext();
   const [bookSources] = useBookSourcesContext();
@@ -30,7 +32,10 @@ export function useBookSearch(targetState: BookStateStringProps) {
   const [loading, setLoading] = useState(false);
 
   const goToAddBook = () => {
-    router.push({ pathname: '/(addBook)/[addBook]', params: { addBook: targetState } });
+    router.push({
+      pathname: '/(addBook)/[addBook]',
+      params: seriesName ? { addBook: targetState, series: seriesName } : { addBook: targetState },
+    });
   };
 
   const openAddModal = () => setFirstModal(true);

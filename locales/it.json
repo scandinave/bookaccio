@@ -40,6 +40,8 @@
   "optional-details": "Dettagli opzionali",
   "isbn": "ISBN",
   "subtitle": "Sottotitolo",
+  "series": "Serie",
+  "series-volume": "Numero del volume",
   "category": "Categoria",
   "published-year": "Anno di pubblicazione",
   "original-title": "Titolo originale",

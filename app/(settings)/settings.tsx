@@ -13,6 +13,7 @@ import { useAccentColorContext } from '@/providers/accentColorProvider';
 import { getBookList } from '@/helpers/getBookList';
 import { useFullBookListContext } from '@/providers/booksFullListProvider';
 import { storeBooks } from '@/helpers/storeBooks';
+import { applySeriesDetection } from '@/helpers/seriesMigration';
 import * as WebBrowser from 'expo-web-browser';
 import { setData } from '@/helpers/storage';
 import { useRatingShownContext } from '@/providers/options/showRatingProvider';
@@ -98,7 +99,15 @@ const Settings = () => {
           Alert.alert(t('warning'), t('warning-clear-books'), [
             {
               text: t('okay'),
-              onPress: () => (setFullBookList([...fileData]), storeBooks(fileData), Alert.alert(t('success'), t('success-import-file'))),
+              onPress: () => {
+                // The one-time migration has already recorded its version, so
+                // books restored from an older export would never be grouped
+                // unless the pass is applied to them here.
+                const imported = applySeriesDetection(fileData);
+                setFullBookList([...imported]);
+                storeBooks(imported);
+                Alert.alert(t('success'), t('success-import-file'));
+              },
             },
             {
               text: t('cancel'),
@@ -125,13 +134,17 @@ const Settings = () => {
     const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
     if (permissions.granted) {
       let dirUrl = permissions.directoryUri;
-      getBookList().then((data) => {
-        setFullBookList(data);
-      });
+
+      // Read the library and export *that*. Exporting the context value meant
+      // exporting whatever the search bar had last filtered it down to, and the
+      // read above it was not awaited, so it never arrived in time anyway.
+      const data = await getBookList();
+      const books = Array.isArray(data) ? data : [];
+      setFullBookList([...books]);
 
       await FileSystem.StorageAccessFramework.createFileAsync(dirUrl, `Bookaccio-Export-${exportDate()}`, 'application/json')
         .then(async (fileUri) => {
-          await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(fullBookList), { encoding: FileSystem.EncodingType.UTF8 });
+          await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(books), { encoding: FileSystem.EncodingType.UTF8 });
           Alert.alert(t('success'), t('export-saved'));
         })
         .catch((e) => {

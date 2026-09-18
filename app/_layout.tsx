@@ -1,8 +1,17 @@
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import Providers from '@/providers/providers';
+import { useSeriesMigration } from '@/hooks/useSeriesMigration';
+
+/** Matches the splash background, so the startup gate is not a white flash. */
+const SPLASH_BACKGROUND = '#77b3d4';
 
 export default function RootLayout() {
+  // Declared before the gate below, and therefore before any screen mounts:
+  // nothing may read `bookList` until the backfill has rewritten it.
+  const isMigrated = useSeriesMigration();
+
   const [loaded] = useFonts({
     LibreB: require('../assets/fonts/LibreBaskerville-Bold.ttf'),
     LibreR: require('../assets/fonts/LibreBaskerville-Regular.ttf'),
@@ -24,8 +33,8 @@ export default function RootLayout() {
     QuicksandR: require('../assets/fonts/Quicksand-Regular.ttf'),
   });
 
-  if (!loaded) {
-    return null;
+  if (!loaded || !isMigrated) {
+    return <View style={{ flex: 1, backgroundColor: SPLASH_BACKGROUND }} />;
   }
 
   return (
@@ -57,6 +66,10 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="(unfinished)"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="(series)"
           options={{ headerShown: false }}
         />
         <Stack.Screen
